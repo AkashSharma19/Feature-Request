@@ -1,0 +1,166 @@
+import { createPortal } from 'react-dom';
+import { cn } from '../../lib/utils';
+
+export function Badge({ children, className, variant = 'default' }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border',
+        className
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+export function StatusBadge({ status }) {
+  const cfg = {
+    Submitted:   'bg-slate-100 text-slate-700 border-slate-200',
+    Reviewing:   'bg-blue-50 text-blue-700 border-blue-200',
+    Planned:     'bg-indigo-50 text-indigo-700 border-indigo-200',
+    Designing:   'bg-purple-50 text-purple-700 border-purple-200',
+    Development: 'bg-orange-50 text-orange-700 border-orange-200',
+    Testing:     'bg-yellow-50 text-yellow-700 border-yellow-200',
+    Released:    'bg-green-50 text-green-700 border-green-200',
+    Rejected:    'bg-red-50 text-red-700 border-red-200',
+  };
+  const dots = {
+    Submitted: 'bg-slate-400', Reviewing: 'bg-blue-500', Planned: 'bg-indigo-500',
+    Designing: 'bg-purple-500', Development: 'bg-orange-500', Testing: 'bg-yellow-500',
+    Released: 'bg-green-500', Rejected: 'bg-red-500',
+  };
+  return (
+    <Badge className={cfg[status] || cfg.Submitted}>
+      <span className={cn('w-1.5 h-1.5 rounded-full', dots[status] || dots.Submitted)} />
+      {status}
+    </Badge>
+  );
+}
+
+
+export function ProgressBar({ value = 0, className }) {
+  return (
+    <div className={cn('progress-bar', className)}>
+      <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.max(0, value))}%` }} />
+    </div>
+  );
+}
+
+export function Button({ children, variant = 'primary', size = 'md', className, ...props }) {
+  const variants = {
+    primary: 'bg-teal-600 text-white hover:bg-teal-700 shadow-sm',
+    secondary: 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50',
+    ghost: 'text-gray-600 hover:bg-gray-100',
+    danger: 'bg-red-600 text-white hover:bg-red-700',
+    outline: 'border border-teal-600 text-teal-600 hover:bg-teal-50',
+  };
+  const sizes = {
+    sm: 'px-3 py-1.5 text-xs',
+    md: 'px-4 py-2 text-sm',
+    lg: 'px-5 py-2.5 text-sm',
+  };
+  return (
+    <button
+      className={cn(
+        'inline-flex items-center gap-2 font-medium rounded-xl transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed',
+        variants[variant],
+        sizes[size],
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
+export function Card({ children, className, ...props }) {
+  return (
+    <div
+      className={cn('bg-white rounded-2xl border border-gray-100 shadow-sm', className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function Input({ className, ...props }) {
+  return (
+    <input
+      className={cn(
+        'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder:text-gray-400',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function Textarea({ className, ...props }) {
+  return (
+    <textarea
+      className={cn(
+        'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder:text-gray-400 resize-none',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
+export function Select({ children, className, ...props }) {
+  return (
+    <select
+      className={cn(
+        'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all appearance-none cursor-pointer',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </select>
+  );
+}
+
+export function Modal({ open, onClose, children, title, size = 'md' }) {
+  if (!open) return null;
+  const sizes = { sm: 'max-w-md', md: 'max-w-2xl', lg: 'max-w-4xl', xl: 'max-w-5xl' };
+  return createPortal(
+    <div
+      className="modal-backdrop"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem',
+        background: 'rgba(15,23,42,0.5)',
+        backdropFilter: 'blur(4px)',
+      }}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className={cn('bg-white rounded-2xl shadow-2xl w-full overflow-hidden modal-content', sizes[size])}>
+        {children}
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+export function Spinner({ size = 20 }) {
+  return (
+    <svg
+      className="animate-spin text-teal-600"
+      width={size} height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+    >
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
