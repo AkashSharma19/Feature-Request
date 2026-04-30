@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Map, BarChart3, Settings,
-  ChevronLeft, ChevronRight, Zap, Star, Megaphone
+  ChevronLeft, ChevronRight, Zap, Star, Megaphone, Mail
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useState } from 'react';
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/roadmap', label: 'Roadmap', icon: Map },
   { to: '/changelogs', label: 'Changelogs', icon: Megaphone },
+  { to: '/emails', label: 'Emails', icon: Mail },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
@@ -39,7 +40,7 @@ export default function Sidebar() {
         </div>
         {!collapsed && (
           <div className="animate-fade-in">
-            <p className="text-sm font-700 text-gray-900 leading-tight font-bold">FeatureFlow</p>
+            <p className="text-sm font-700 text-gray-900 leading-tight font-bold">Coach</p>
             <p className="text-[10px] text-gray-400 font-medium tracking-wide">ADMIN PANEL</p>
           </div>
         )}
@@ -60,7 +61,12 @@ export default function Sidebar() {
             Main Menu
           </p>
         )}
-        {NAV_ITEMS.filter(item => isAdmin || item.label !== 'Analytics').map(({ to, label, icon: Icon }) => {
+        {NAV_ITEMS.filter(item => {
+          if (!isAdmin) {
+            return !['Analytics', 'Emails'].includes(item.label);
+          }
+          return true;
+        }).map(({ to, label, icon: Icon }) => {
           const path = getPath(to);
           const current = location.pathname;
           

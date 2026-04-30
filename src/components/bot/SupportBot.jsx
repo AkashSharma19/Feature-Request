@@ -92,7 +92,7 @@ export default function SupportBot() {
                   <Zap size={20} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-white">FeatureFlow Bot</h3>
+                  <h3 className="font-bold text-lg text-white">Coach Bot</h3>
                   <p className="text-xs text-teal-100">Synchronized with Roadmap</p>
                 </div>
               </div>
@@ -334,7 +334,7 @@ export default function SupportBot() {
 
           {/* Footer */}
           <div className="px-6 py-4 bg-white border-t border-gray-100 flex justify-center">
-            <p className="text-[10px] text-gray-300">Powered by FeatureFlow AI</p>
+            <p className="text-[10px] text-gray-300">Powered by Coach AI</p>
           </div>
         </div>
       )}

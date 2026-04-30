@@ -1,4 +1,4 @@
-import { FileText, Clock, Calendar, Code2, CheckCircle, TrendingUp } from 'lucide-react';
+import { FileText, Clock, Calendar, Code2, CheckCircle } from 'lucide-react';
 import { Card } from '../ui';
 import { cn } from '../../lib/utils';
 
@@ -57,7 +57,6 @@ export default function SummaryCards({ requests }) {
       {CARDS.map((card, i) => {
         const Icon = card.icon;
         const value = card.fn(requests);
-        const pct = Math.round((value / total) * 100);
         return (
           <Card
             key={card.key}
@@ -68,19 +67,11 @@ export default function SummaryCards({ requests }) {
               <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center', card.lightBg)}>
                 <Icon size={16} className={card.textColor} />
               </div>
-              <span className="flex items-center gap-1 text-xs text-gray-400 font-medium">
-                <TrendingUp size={10} />
-                {pct}%
-              </span>
+
             </div>
             <p className="text-2xl font-bold text-gray-900">{value}</p>
             <p className="text-xs text-gray-500 mt-0.5 font-medium">{card.label}</p>
-            <div className="mt-3 h-1 bg-gray-100 rounded-full overflow-hidden">
-              <div
-                className={cn('h-full rounded-full bg-gradient-to-r transition-all duration-700', card.gradient)}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
+
           </Card>
         );
       })}

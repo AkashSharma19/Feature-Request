@@ -6,6 +6,7 @@ import RoadmapPage from './pages/RoadmapPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import WelcomePage from './pages/WelcomePage';
 import ChangelogsPage from './pages/ChangelogsPage';
+import EmailsPage from './pages/EmailsPage';
 
 export default function App() {
   return (
@@ -25,6 +26,7 @@ export default function App() {
           <Route path="/admin/roadmap" element={<RoadmapPage />} />
           <Route path="/admin/changelogs" element={<ChangelogsPage />} />
           <Route path="/admin/analytics" element={<AnalyticsPage />} />
+          <Route path="/admin/emails" element={<EmailsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

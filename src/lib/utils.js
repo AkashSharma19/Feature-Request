@@ -31,7 +31,12 @@ export const STATUS_PROGRESS = {
 
 export const CATEGORIES = ['Bug', 'Feature Request', 'Data Needed', 'Term Report/ Transcript'];
 export const STATUSES = ['Open', 'In Progress', 'In Design', 'Under Review', 'Development', 'Testing', 'Tested', 'Closed', 'Cancelled'];
-export const ASSIGNEES = ['Unassigned', 'Anushka', 'Akash', 'Nikhil'];
+export const ASSIGNEES = [
+  { name: 'Unassigned', role: '', email: '' },
+  { name: 'Anushka', role: 'Super Admin', email: 'anushka@coach.com' },
+  { name: 'Akash', role: 'Manager', email: 'akash@coach.com' },
+  { name: 'Nikhil', role: 'Admin', email: 'nikhil@coach.com' }
+];
 
 export function formatDate(dateStr) {
   if (!dateStr) return '—';

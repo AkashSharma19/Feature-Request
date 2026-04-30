@@ -260,9 +260,13 @@ export default function RequestDetailPage() {
                       <Select
                         value={request.assignee || 'Unassigned'}
                         onChange={(e) => updateRequest(request.id, { assignee: e.target.value })}
-                        className="w-40 text-xs py-1"
+                        className="w-80 text-xs py-1"
                       >
-                        {ASSIGNEES.map((a) => <option key={a}>{a}</option>)}
+                        {ASSIGNEES.map((a) => (
+                          <option key={a.name} value={a.name}>
+                            {a.name} {a.role && `(${a.role}${a.email ? ` - ${a.email}` : ''})`}
+                          </option>
+                        ))}
                       </Select>
                     </div>
                   </div>
