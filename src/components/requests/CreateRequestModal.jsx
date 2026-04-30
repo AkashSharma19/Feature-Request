@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { X, Paperclip, Save, Send } from 'lucide-react';
-import { Modal, Button, Input, Textarea, Select } from '../ui';
+import { Modal, Button, Input, Textarea, Select, RichTextEditor } from '../ui';
 import { useStore } from '../../store/useStore';
 import { CATEGORIES, cn } from '../../lib/utils';
 import { useAdmin } from '../../lib/useAdmin';
+import { AlertTriangle, ChevronRight, Vote } from 'lucide-react';
 
 const PLATFORMS = ['Coach LMS', 'Career Coach', 'Coach Resume'];
 
@@ -35,9 +36,10 @@ function Field({ label, required, children }) {
 }
 
 export default function CreateRequestModal({ open, onClose, editData = null }) {
-  const { addRequest, updateRequest } = useStore();
+  const { addRequest, updateRequest, requests, toggleVote, votes } = useStore();
   const [form, setForm] = useState(INITIAL);
   const [errors, setErrors] = useState({});
+  const [similarRequests, setSimilarRequests] = useState([]);
   const isAdmin = useAdmin();
 
   useEffect(() => {
@@ -51,10 +53,23 @@ export default function CreateRequestModal({ open, onClose, editData = null }) {
       } else {
         setForm(INITIAL);
       }
+      setSimilarRequests([]);
     }
   }, [open, editData]);
 
   const isEdit = !!editData;
+
+  useEffect(() => {
+    if (!isEdit && form.title.length > 3) {
+      const query = form.title.toLowerCase();
+      const matches = requests
+        .filter(r => r.title.toLowerCase().includes(query))
+        .slice(0, 3);
+      setSimilarRequests(matches);
+    } else {
+      setSimilarRequests([]);
+    }
+  }, [form.title, requests, isEdit]);
 
   const set = (key, val) => {
     setForm((f) => ({ ...f, [key]: val }));
@@ -143,16 +158,45 @@ export default function CreateRequestModal({ open, onClose, editData = null }) {
             className={errors.title ? 'border-red-400 focus:border-red-400' : ''}
           />
           {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+
+          {similarRequests.length > 0 && (
+            <div className="mt-3 p-3 bg-orange-50 border border-orange-100 rounded-xl animate-fade-in">
+              <div className="flex items-center gap-2 text-orange-700 font-bold text-xs mb-2">
+                <AlertTriangle size={14} />
+                Similar requests already exist
+              </div>
+              <div className="space-y-2">
+                {similarRequests.map(r => (
+                  <div key={r.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-orange-100/50 shadow-sm">
+                    <div className="flex-1 min-w-0 mr-3">
+                      <p className="text-[11px] font-semibold text-gray-800 truncate">{r.title}</p>
+                      <p className="text-[10px] text-gray-500">{r.votes} votes • {r.status}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleVote(r.id)}
+                      className={cn(
+                        "flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all",
+                        votes[r.id] ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-teal-50"
+                      )}
+                    >
+                      <ChevronRight size={10} />
+                      Upvote
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-orange-600 mt-2 italic">Consider upvoting these instead of creating a duplicate.</p>
+            </div>
+          )}
         </Field>
 
         {/* Description */}
         <Field label="Description" required>
-          <Textarea
-            rows={3}
-            placeholder="Describe the feature in detail…"
+          <RichTextEditor
             value={form.description}
-            onChange={(e) => set('description', e.target.value)}
-            className={errors.description ? 'border-red-400' : ''}
+            onChange={(val) => set('description', val)}
+            placeholder="Describe the feature in detail…"
           />
           {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
         </Field>

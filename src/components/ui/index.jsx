@@ -164,3 +164,4 @@ export function Spinner({ size = 20 }) {
     </svg>
   );
 }
+export { default as RichTextEditor } from './RichTextEditor';

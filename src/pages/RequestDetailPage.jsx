@@ -337,7 +337,10 @@ export default function RequestDetailPage() {
                 <div className="space-y-5 animate-fade-in">
                   <div>
                     <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Description</h3>
-                    <p className="text-sm text-gray-700 leading-relaxed">{request.description}</p>
+                    <div 
+                      className="prose prose-teal max-w-none text-sm text-gray-600 leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: request.description }}
+                    />
                   </div>
                   {request.problem && (
                     <div>
