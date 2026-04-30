@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, X, Send, List, Sparkles, ChevronRight } from 'lucide-react';
+import { MessageSquare, X, Send, List, Sparkles, ChevronRight, Zap, Check, Paperclip, Camera } from 'lucide-react';
 import { Button, Input, Textarea, Select } from '../ui';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../lib/utils';
@@ -24,6 +24,43 @@ export default function SupportBot() {
   const navigate = useNavigate();
   
   const [form, setForm] = useState(INITIAL_FORM);
+  const [isCapturing, setIsCapturing] = useState(false);
+
+  const takeScreenshot = async () => {
+    setIsCapturing(true);
+    setIsOpen(false); // Hide bot so it doesn't block the screen
+    
+    // Wait for bot to animate out
+    setTimeout(async () => {
+      try {
+        const html2canvas = (await import('html2canvas')).default;
+        const canvas = await html2canvas(document.body, {
+          useCORS: true,
+          logging: false
+        });
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], `screenshot-${Date.now()}.png`, { type: 'image/png' });
+            const mockAtt = {
+              id: `att-${Date.now()}-screenshot`,
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              url: URL.createObjectURL(blob)
+            };
+            set('attachments', [...(form.attachments || []), mockAtt]);
+          }
+          setIsOpen(true);
+          setIsCapturing(false);
+        });
+      } catch (err) {
+        console.error("Screenshot failed:", err);
+        setIsOpen(true);
+        setIsCapturing(false);
+      }
+    }, 300);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -224,6 +261,57 @@ export default function SupportBot() {
                   </div>
                 </div>
 
+                {/* Attachments Section */}
+                <div className="space-y-3 pt-2 border-t border-gray-100">
+                  <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Attachments</label>
+                  
+                  <div className="flex gap-2">
+                    <input 
+                      type="file" 
+                      id="bot-file-upload" 
+                      className="hidden" 
+                      multiple 
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files).map(f => ({
+                          id: `att-${Date.now()}-${f.name}`,
+                          name: f.name,
+                          size: f.size,
+                          type: f.type,
+                          url: '#', // Mock URL
+                        }));
+                        set('attachments', [...(form.attachments || []), ...files]);
+                      }}
+                    />
+                    <label 
+                      htmlFor="bot-file-upload"
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-xs font-medium text-gray-500 hover:bg-gray-100 hover:border-teal-300 hover:text-teal-600 cursor-pointer transition-all"
+                    >
+                      <Paperclip size={14} /> Upload
+                    </label>
+                    <button
+                      onClick={takeScreenshot}
+                      type="button"
+                      className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-teal-50 border border-dashed border-teal-200 rounded-xl text-xs font-medium text-teal-600 hover:bg-teal-100 hover:border-teal-300 cursor-pointer transition-all"
+                    >
+                      <Camera size={14} /> {isCapturing ? 'Capturing...' : 'Screenshot'}
+                    </button>
+                  </div>
+
+                  {/* Attached files list */}
+                  {(form.attachments || []).length > 0 && (
+                    <div className="flex flex-col gap-2 mt-2 max-h-[100px] overflow-y-auto">
+                      {form.attachments.map(file => (
+                        <div key={file.id} className="flex items-center justify-between px-3 py-2 bg-white border border-gray-100 rounded-xl text-xs font-medium text-gray-700 shadow-sm">
+                          <span className="truncate max-w-[200px]">{file.name}</span>
+                          <button onClick={() => set('attachments', form.attachments.filter(f => f.id !== file.id))}>
+                            <X size={12} className="text-gray-400 hover:text-red-500" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <Button variant="primary" className="w-full h-12" onClick={handleSubmit}>
                   <Send size={16} /> Submit Request
                 </Button>
@@ -265,31 +353,3 @@ export default function SupportBot() {
   );
 }
 
-// Minimal icons needed for the bot
-function Zap({ size, className }) {
-  return (
-    <svg 
-      width={size} height={size} 
-      viewBox="0 0 24 24" fill="none" 
-      stroke="currentColor" strokeWidth="2" 
-      strokeLinecap="round" strokeLinejoin="round" 
-      className={className}
-    >
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
-  );
-}
-
-function Check({ size, className }) {
-  return (
-    <svg 
-      width={size} height={size} 
-      viewBox="0 0 24 24" fill="none" 
-      stroke="currentColor" strokeWidth="3" 
-      strokeLinecap="round" strokeLinejoin="round" 
-      className={className}
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}

@@ -14,6 +14,7 @@ export const useStore = create(
       comments: MOCK_COMMENTS,     // { featureId: Comment[] }
       roadmapItems: MOCK_ROADMAP_ITEMS,
       clickupSettings: { apiKey: '', teamId: '' },
+      releaseNoteLikes: {},        // { featureId: boolean }
 
       // ── Requests ─────────────────────────────────────────────
       addRequest: (data) => {
@@ -83,6 +84,14 @@ export const useStore = create(
               ? { ...r, votes: hasVoted ? r.votes - 1 : r.votes + 1 }
               : r
           ),
+        }));
+      },
+
+      toggleReleaseNoteLike: (featureId) => {
+        const { releaseNoteLikes } = get();
+        const hasLiked = releaseNoteLikes[featureId];
+        set((s) => ({
+          releaseNoteLikes: { ...s.releaseNoteLikes, [featureId]: !hasLiked },
         }));
       },
 

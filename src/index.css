@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap');
+
 @import "tailwindcss";
 
 @theme {
@@ -11,11 +13,8 @@
   --color-teal-700: #0f766e;
   --color-teal-800: #115e59;
   --color-teal-900: #134e4a;
-
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: "Google Sans", system-ui, sans-serif;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -26,7 +25,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Google Sans', system-ui, sans-serif;
   background-color: #f8fafc;
   color: #1e293b;
   margin: 0;

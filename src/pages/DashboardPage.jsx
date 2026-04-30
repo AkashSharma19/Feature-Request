@@ -5,7 +5,7 @@ import SummaryCards from '../components/dashboard/SummaryCards';
 import FilterBar from '../components/dashboard/FilterBar';
 import RequestTable from '../components/dashboard/RequestTable';
 import CreateRequestModal from '../components/requests/CreateRequestModal';
-import { Button, Card } from '../components/ui';
+import { Button, Card, Select } from '../components/ui';
 import { useAdmin } from '../lib/useAdmin';
 
 const DEFAULT_FILTERS = { search: '', status: '', category: '', sort: 'votes', scope: 'all' };
@@ -77,6 +77,21 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-sm text-gray-500 mt-1">Manage and track all feature requests.</p>
+        </div>
+        <div className="w-48">
+          <Select className="py-1.5 text-xs font-medium text-gray-700 bg-white border-gray-200">
+            <option>All Organizations</option>
+            <option>Masters' Union</option>
+            <option>TETR</option>
+          </Select>
+        </div>
+      </div>
+
       {/* Summary Cards */}
       <SummaryCards requests={requests} />
 

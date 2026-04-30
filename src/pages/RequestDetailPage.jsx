@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Edit2, Archive, Trash2, Pin, ChevronDown,
   Calendar, User, Tag, Target, AlertCircle, Check, X,
-  RefreshCw, ExternalLink, Settings, Paperclip
+  RefreshCw, ExternalLink, Settings, Paperclip, Megaphone
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import {
@@ -57,6 +57,59 @@ function CancelModal({ open, onClose, onConfirm }) {
   );
 }
 
+function ReleaseNoteModal({ open, onClose, onConfirm, defaultValues }) {
+  const [title, setTitle] = useState(defaultValues?.title || '');
+  const [description, setDescription] = useState(defaultValues?.description || '');
+  const [link, setLink] = useState(defaultValues?.link || '');
+
+  return (
+    <Modal open={open} onClose={onClose} size="md">
+      <div className="p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-1">Add to Changelogs</h3>
+        <p className="text-sm text-gray-500 mb-4">Publish this feature to the public changelog.</p>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Title</label>
+            <Input 
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Release Note Title"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Description</label>
+            <Textarea
+              rows={4}
+              placeholder="Write the release notes..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Support Doc Link (Optional)</label>
+            <Input 
+              value={link}
+              onChange={(e) => setLink(e.target.value)}
+              placeholder="https://support.example.com/..."
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 mt-6">
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button variant="primary" onClick={() => {
+            onConfirm({ title, description, link });
+            onClose();
+          }}>
+            Publish Release Note
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 export default function RequestDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -67,6 +120,7 @@ export default function RequestDetailPage() {
   const [activeTab, setActiveTab] = useState('Overview');
   const [showEdit, setShowEdit] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
+  const [showReleaseNote, setShowReleaseNote] = useState(false);
   const [showClickupSettings, setShowClickupSettings] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [noteEdit, setNoteEdit] = useState(false);
@@ -450,6 +504,20 @@ export default function RequestDetailPage() {
                 <Button
                   variant="secondary"
                   size="sm"
+                  className="w-full justify-start text-indigo-600 hover:bg-indigo-50"
+                  onClick={() => {
+                    if (request.isReleaseNote) {
+                      updateRequest(request.id, { isReleaseNote: false });
+                    } else {
+                      setShowReleaseNote(true);
+                    }
+                  }}
+                >
+                  <Megaphone size={13} /> {request.isReleaseNote ? 'Remove from Changelog' : 'Add to Changelog'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
                   className="w-full justify-start text-red-600 hover:bg-red-50"
                   onClick={() => setShowCancel(true)}
                 >
@@ -479,6 +547,24 @@ export default function RequestDetailPage() {
         open={showCancel}
         onClose={() => setShowCancel(false)}
         onConfirm={(reason) => updateRequest(request.id, { status: 'Cancelled', rejectionReason: reason })}
+      />
+      <ReleaseNoteModal
+        open={showReleaseNote}
+        onClose={() => setShowReleaseNote(false)}
+        defaultValues={{
+          title: request.releaseNoteTitle || request.title,
+          description: request.releaseNoteDescription || request.description,
+          link: request.releaseNoteLink || ''
+        }}
+        onConfirm={(data) => {
+          updateRequest(request.id, {
+            isReleaseNote: true,
+            releaseNoteDate: new Date().toISOString(),
+            releaseNoteTitle: data.title,
+            releaseNoteDescription: data.description,
+            releaseNoteLink: data.link
+          });
+        }}
       />
 
       <Modal open={showClickupSettings} onClose={() => setShowClickupSettings(false)} title="ClickUp Integration Settings">

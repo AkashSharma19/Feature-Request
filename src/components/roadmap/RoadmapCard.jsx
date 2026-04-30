@@ -4,19 +4,21 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { StatusBadge, ProgressBar } from '../ui';
 import { useStore } from '../../store/useStore';
+import { useAdmin } from '../../lib/useAdmin';
 import { formatDate, cn } from '../../lib/utils';
 
-export default function RoadmapCard({ item, feature }) {
+export default function RoadmapCard({ item, feature, isOverlay }) {
   const navigate = useNavigate();
+  const isAdmin = useAdmin();
   const { toggleVote, votes } = useStore();
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging,
-  } = useSortable({ id: item.id });
+  } = useSortable({ id: item.id, disabled: !isAdmin || isOverlay });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging && !isOverlay ? 0.4 : 1,
   };
 
   if (!feature) return null;
@@ -27,18 +29,20 @@ export default function RoadmapCard({ item, feature }) {
       style={style}
       className={cn(
         'bg-white rounded-xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all group',
-        isDragging && 'shadow-xl border-teal-300 rotate-1'
+        isDragging && !isOverlay && 'shadow-xl border-teal-300 opacity-50'
       )}
     >
       <div className="flex items-start gap-2">
         {/* Drag handle */}
-        <button
-          {...attributes}
-          {...listeners}
-          className="mt-0.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing transition-colors"
-        >
-          <GripVertical size={14} />
-        </button>
+        {isAdmin && (
+          <button
+            {...attributes}
+            {...listeners}
+            className="mt-0.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing transition-colors"
+          >
+            <GripVertical size={14} />
+          </button>
+        )}
 
         <div className="flex-1 min-w-0">
           <p

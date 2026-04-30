@@ -5,7 +5,8 @@ import {
 import { arrayMove } from '@dnd-kit/sortable';
 import { useStore } from '../store/useStore';
 import RoadmapColumn from '../components/roadmap/RoadmapColumn';
-import { Card, Button } from '../components/ui';
+import RoadmapCard from '../components/roadmap/RoadmapCard';
+import { Card, Button, Select } from '../components/ui';
 import { cn, getQuarterFromDate } from '../lib/utils';
 import { useAdmin } from '../lib/useAdmin';
 
@@ -118,20 +119,32 @@ export default function RoadmapPage() {
     }
   };
 
-  const activeItem = roadmapItems.find((i) => i.id === activeId);
-  const activeFeature = activeItem ? requests.find((r) => r.id === activeItem.featureId) : null;
+  const activeFeatureId = activeId?.toString().startsWith('virtual-') 
+    ? activeId.replace('virtual-', '') 
+    : roadmapItems.find((i) => i.id === activeId)?.featureId;
+  const activeFeature = activeFeatureId ? requests.find((r) => r.id === activeFeatureId) : null;
+
+  const activeItem = roadmapItems.find((i) => i.id === activeId) || { id: activeId, featureId: activeFeatureId };
 
   return (
     <div className="p-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-base font-bold text-gray-900">Product Roadmap</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
+          <h1 className="text-xl font-bold text-gray-900">Product Roadmap</h1>
+          <p className="text-sm text-gray-500 mt-1">
             Drag cards between columns to reorganize. {view === 'quarterly' ? 'Showing quarterly timeline.' : 'Showing by development status.'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Organization Switcher */}
+          <div className="w-40">
+            <Select className="py-1.5 text-xs font-medium text-gray-700 bg-white border-gray-200">
+              <option>All Organizations</option>
+              <option>Masters' Union</option>
+              <option>TETR</option>
+            </Select>
+          </div>
           {view === 'quarterly' && (
             <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
               {years.map(y => (
@@ -191,13 +204,12 @@ export default function RoadmapPage() {
           ))}
         </div>
 
-        <DragOverlay>
-          {activeFeature && (
-            <div className="bg-white rounded-xl border border-teal-300 shadow-2xl p-3 w-64 rotate-2 opacity-90">
-              <p className="text-sm font-bold text-gray-800 line-clamp-2">{activeFeature.title}</p>
-              <p className="text-xs text-gray-400 mt-1">{activeFeature.category}</p>
+        <DragOverlay dropAnimation={null}>
+          {activeFeature && activeItem ? (
+            <div className="w-[236px] opacity-95 rotate-2">
+              <RoadmapCard item={activeItem} feature={activeFeature} isOverlay={true} />
             </div>
-          )}
+          ) : null}
         </DragOverlay>
       </DndContext>
 

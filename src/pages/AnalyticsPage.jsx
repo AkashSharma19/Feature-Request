@@ -5,7 +5,7 @@ import {
   RadialBarChart, RadialBar
 } from 'recharts';
 import { useStore } from '../store/useStore';
-import { Card } from '../components/ui';
+import { Card, Select } from '../components/ui';
 
 const TEAL_PALETTE = ['#0d9488', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4', '#0f766e'];
 const CATEGORY_COLORS = {
@@ -82,14 +82,25 @@ export default function AnalyticsPage() {
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [requests]);
 
-  // 5. Completion rate radial
-  const released = requests.filter((r) => r.status === 'Released').length;
-  const completionRate = Math.round((released / (requests.length || 1)) * 100);
-  const radialData = [
-    { name: 'Released', value: completionRate, fill: '#0d9488' },
-    { name: 'In Progress', value: Math.round((requests.filter(r => r.status === 'Development' || r.status === 'Testing').length / (requests.length || 1)) * 100), fill: '#f97316' },
-    { name: 'Planned', value: Math.round((requests.filter(r => r.status === 'Planned' || r.status === 'Designing').length / (requests.length || 1)) * 100), fill: '#8b5cf6' },
-  ];
+  // 5. Distribution of Organizations
+  const organizationData = useMemo(() => {
+    const map = {};
+    let hasData = false;
+    requests.forEach((r) => {
+      const org = r.organization || 'Unassigned';
+      map[org] = (map[org] || 0) + 1;
+      hasData = true;
+    });
+    if (!hasData) {
+      return [
+        { name: "Masters' Union", value: 60 },
+        { name: "TETR", value: 40 }
+      ];
+    }
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [requests]);
+
+  const ORG_COLORS = ['#0d9488', '#f97316', '#8b5cf6', '#3b82f6', '#eab308'];
 
   // Summary stats
   const avgProgress = Math.round(requests.reduce((a, r) => a + r.progress, 0) / (requests.length || 1));
@@ -98,6 +109,21 @@ export default function AnalyticsPage() {
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-2">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">Analytics</h1>
+          <p className="text-sm text-gray-500 mt-1">Insights into your feature pipeline.</p>
+        </div>
+        <div className="w-48">
+          <Select className="py-1.5 text-xs font-medium text-gray-700 bg-white border-gray-200">
+            <option>All Organizations</option>
+            <option>Masters' Union</option>
+            <option>TETR</option>
+          </Select>
+        </div>
+      </div>
+
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
@@ -201,45 +227,30 @@ export default function AnalyticsPage() {
 
         {/* Completion Rate + Status Breakdown */}
         <div className="space-y-4">
-          {/* Completion Rate */}
-          <ChartCard title="Completion Rate" subtitle={`${released} of ${requests.length} released`}>
-            <div className="flex items-center justify-center">
-              <ResponsiveContainer width="100%" height={160}>
-                <RadialBarChart
-                  innerRadius="55%"
-                  outerRadius="90%"
-                  data={radialData}
-                  startAngle={180}
-                  endAngle={0}
+          {/* Distribution of Organizations */}
+          <ChartCard title="Organizations" subtitle="Distribution of requests by org">
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={organizationData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={75}
+                  paddingAngle={3}
+                  dataKey="value"
                 >
-                  <RadialBar
-                    minAngle={5}
-                    background={{ fill: '#f1f5f9' }}
-                    clockWise
-                    dataKey="value"
-                    cornerRadius={4}
-                  />
-                  <text
-                    x="50%"
-                    y="70%"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className="fill-teal-600"
-                    style={{ fontSize: 22, fontWeight: 800, fill: '#0d9488' }}
-                  >
-                    {completionRate}%
-                  </text>
-                </RadialBarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="flex justify-center gap-4 -mt-2">
-              {radialData.map((d) => (
-                <div key={d.name} className="flex items-center gap-1.5 text-xs text-gray-500">
-                  <div className="w-2 h-2 rounded-full" style={{ background: d.fill }} />
-                  {d.name}
-                </div>
-              ))}
-            </div>
+                  {organizationData.map((entry, index) => (
+                    <Cell key={entry.name} fill={ORG_COLORS[index % ORG_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+                <Legend
+                  wrapperStyle={{ fontSize: 10 }}
+                  formatter={(value) => <span className="text-gray-600">{value}</span>}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </ChartCard>
 
           {/* Status breakdown */}

@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Map, BarChart3, Settings,
-  ChevronLeft, ChevronRight, Zap, Star
+  ChevronLeft, ChevronRight, Zap, Star, Megaphone
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useState } from 'react';
@@ -9,6 +9,7 @@ import { useState } from 'react';
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/roadmap', label: 'Roadmap', icon: Map },
+  { to: '/changelogs', label: 'Changelogs', icon: Megaphone },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 
@@ -59,39 +60,48 @@ export default function Sidebar() {
             Main Menu
           </p>
         )}
-        {NAV_ITEMS.filter(item => isAdmin || item.label !== 'Analytics').map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={getPath(to)}
-            end={end}
-            className={({ isActive }) =>
-              cn(
+        {NAV_ITEMS.filter(item => isAdmin || item.label !== 'Analytics').map(({ to, label, icon: Icon }) => {
+          const path = getPath(to);
+          const current = location.pathname;
+          
+          let isActive = false;
+          if (label === 'Dashboard') {
+            if (isAdmin) {
+              isActive = current === '/admin' || current.startsWith('/admin/requests/');
+            } else {
+              isActive = current === '/dashboard' || current.startsWith('/requests/');
+            }
+          } else {
+            isActive = current.startsWith(path);
+          }
+
+          return (
+            <NavLink
+              key={to}
+              to={path}
+              className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
                 isActive
                   ? 'bg-teal-50 text-teal-700 shadow-sm'
                   : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <Icon
-                  size={18}
-                  className={cn(
-                    'flex-shrink-0 transition-colors',
-                    isActive ? 'text-teal-600' : 'text-gray-400'
-                  )}
-                />
-                {!collapsed && (
-                  <span className="animate-fade-in truncate">{label}</span>
+              )}
+            >
+              <Icon
+                size={18}
+                className={cn(
+                  'flex-shrink-0 transition-colors',
+                  isActive ? 'text-teal-600' : 'text-gray-400'
                 )}
-                {!collapsed && isActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-teal-500 animate-fade-in" />
-                )}
-              </>
-            )}
-          </NavLink>
-        ))}
+              />
+              {!collapsed && (
+                <span className="animate-fade-in truncate">{label}</span>
+              )}
+              {!collapsed && isActive && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-teal-500 animate-fade-in" />
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Footer */}
