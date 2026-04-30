@@ -149,6 +149,19 @@ export default function RequestDetailPage() {
         <ArrowLeft size={15} /> Back to Dashboard
       </button>
 
+      {/* Action Needed Banner */}
+      {request.actionNeeded && (
+        <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-xl flex items-start gap-3 shadow-sm animate-fade-in">
+          <AlertCircle className="text-orange-600 mt-0.5" size={18} />
+          <div>
+            <h3 className="text-sm font-bold text-orange-800">Action Needed</h3>
+            <p className="text-xs text-orange-700 mt-1">
+              The admin team has requested more information or action from you. Please review the comments and reply below. Your reply will automatically clear this status.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Left / Main ── */}
         <div className="lg:col-span-2 space-y-6">

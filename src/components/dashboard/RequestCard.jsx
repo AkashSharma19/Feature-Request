@@ -11,7 +11,10 @@ export default function RequestCard({ request, rank }) {
 
   return (
     <Card
-      className="p-4 feature-card cursor-pointer relative overflow-hidden animate-fade-in"
+      className={cn(
+        "p-4 feature-card cursor-pointer relative overflow-hidden animate-fade-in",
+        request.actionNeeded ? "ring-2 ring-orange-400 border-orange-400 bg-orange-50/10" : ""
+      )}
       onClick={() => navigate(`/requests/${request.id}`)}
     >
       {/* Trending ribbon */}
@@ -38,6 +41,11 @@ export default function RequestCard({ request, rank }) {
 
       {/* Badges */}
       <div className="flex flex-wrap gap-1.5 mb-3">
+        {request.actionNeeded && (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border bg-orange-100 text-orange-700 border-orange-200">
+            Action Needed
+          </span>
+        )}
         <StatusBadge status={request.status} />
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-gray-50 text-gray-600 border-gray-200">
           {request.category}

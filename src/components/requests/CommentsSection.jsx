@@ -1,19 +1,28 @@
 import { useState } from 'react';
-import { Send, Lock } from 'lucide-react';
+import { Send, Lock, AlertCircle } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Textarea, Button } from '../ui';
+import { useAdmin } from '../../lib/useAdmin';
 import { timeAgo, cn } from '../../lib/utils';
 
 export default function CommentsSection({ featureId }) {
   const { comments, addComment } = useStore();
+  const isAdmin = useAdmin();
   const featureComments = comments[featureId] || [];
   const [text, setText] = useState('');
   const [isInternal, setIsInternal] = useState(false);
+  const [actionNeeded, setActionNeeded] = useState(false);
 
   const handleSubmit = () => {
     if (!text.trim()) return;
-    addComment(featureId, text.trim(), isInternal);
+    addComment(featureId, text.trim(), { 
+      isInternal, 
+      actionNeeded: isAdmin ? actionNeeded : false, 
+      authorIsAdmin: isAdmin,
+      authorName: isAdmin ? 'Admin' : 'User' 
+    });
     setText('');
+    setActionNeeded(false);
   };
 
   return (
@@ -63,19 +72,40 @@ export default function CommentsSection({ featureId }) {
           onChange={(e) => setText(e.target.value)}
           className="border-0 rounded-none focus:ring-0 resize-none"
         />
-        <div className="flex items-center justify-between px-3 py-2 bg-gray-50/50 border-t border-gray-100">
-          <button
-            onClick={() => setIsInternal(!isInternal)}
-            className={cn(
-              'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all',
-              isInternal
-                ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                : 'bg-gray-100 text-gray-500 hover:bg-amber-50 hover:text-amber-600'
+        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-gray-50/50 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <>
+                <button
+                  onClick={() => setIsInternal(!isInternal)}
+                  className={cn(
+                    'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all',
+                    isInternal
+                      ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                      : 'bg-gray-100 text-gray-500 hover:bg-amber-50 hover:text-amber-600'
+                  )}
+                >
+                  <Lock size={11} />
+                  {isInternal ? 'Internal Note' : 'Mark as Internal'}
+                </button>
+
+                {!isInternal && (
+                  <button
+                    onClick={() => setActionNeeded(!actionNeeded)}
+                    className={cn(
+                      'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all',
+                      actionNeeded
+                        ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                        : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-600'
+                    )}
+                  >
+                    <AlertCircle size={11} />
+                    {actionNeeded ? 'Action Needed' : 'Request Action'}
+                  </button>
+                )}
+              </>
             )}
-          >
-            <Lock size={11} />
-            {isInternal ? 'Internal Note' : 'Mark as Internal'}
-          </button>
+          </div>
           <Button
             variant="primary"
             size="sm"

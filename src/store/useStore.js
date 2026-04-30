@@ -96,34 +96,33 @@ export const useStore = create(
       },
 
       // ── Comments ──────────────────────────────────────────────
-      addComment: (featureId, text, isInternal = false) => {
-        const comment = {
-          id: `c-${Date.now()}`,
-          user: 'Admin',
-          avatar: 'A',
-          text,
-          date: new Date().toISOString(),
-          internal: isInternal,
-        };
+      addComment: (featureId, text, options = {}) => {
+        const { isInternal = false, actionNeeded = false, authorIsAdmin = true, authorName = 'Admin User' } = options;
+        const newComment = { id: Date.now().toString(), text, date: new Date().toISOString(), user: authorName, internal: isInternal };
         set((s) => ({
-          comments: {
-            ...s.comments,
-            [featureId]: [...(s.comments[featureId] || []), comment],
-          },
-          requests: s.requests.map((r) =>
-            r.id === featureId
-              ? {
-                  ...r,
-                  activityLog: [...(r.activityLog || []), {
-                    id: `a-${Date.now()}`,
-                    type: 'comment',
-                    text: isInternal ? 'Internal note added' : 'Comment added',
-                    date: new Date().toISOString(),
-                    user: 'Admin',
-                  }],
-                }
-              : r
-          ),
+          comments: { ...s.comments, [featureId]: [...(s.comments[featureId] || []), newComment] },
+          requests: s.requests.map(r => {
+            if (r.id !== featureId) return r;
+            
+            let updatedRequest = {
+              ...r,
+              activityLog: [...(r.activityLog || []), {
+                id: Date.now().toString(),
+                type: isInternal ? 'internal_note' : 'comment',
+                text: isInternal ? 'Internal note added' : 'Comment added',
+                date: new Date().toISOString(),
+                user: authorName,
+              }],
+            };
+
+            if (actionNeeded) {
+              updatedRequest.actionNeeded = true;
+            } else if (!authorIsAdmin && !isInternal) {
+              updatedRequest.actionNeeded = false;
+            }
+
+            return updatedRequest;
+          }),
         }));
       },
 
