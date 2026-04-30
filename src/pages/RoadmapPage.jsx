@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay,
 } from '@dnd-kit/core';
@@ -10,13 +10,31 @@ import { Card, Button, Select } from '../components/ui';
 import { cn, getQuarterFromDate } from '../lib/utils';
 import { useAdmin } from '../lib/useAdmin';
 
-const QUARTER_COLUMNS = [
-  { id: 'Backlog', label: 'Backlog', color: 'bg-slate-400' },
-  { id: 'Q1', label: 'Q1 — Jan to Mar', color: 'bg-blue-400' },
-  { id: 'Q2', label: 'Q2 — Apr to Jun', color: 'bg-teal-500' },
-  { id: 'Q3', label: 'Q3 — Jul to Sep', color: 'bg-purple-500' },
-  { id: 'Q4', label: 'Q4 — Oct to Dec', color: 'bg-orange-500' },
-];
+const QUARTER_COLORS = {
+  Q1: 'bg-blue-400',
+  Q2: 'bg-teal-500',
+  Q3: 'bg-purple-500',
+  Q4: 'bg-orange-500',
+};
+
+const generateQuarterColumns = () => {
+  const currentYear = new Date().getFullYear();
+  const cols = [{ id: 'Backlog', label: 'Backlog', color: 'bg-slate-400' }];
+  
+  // 1 year back to 1 year forward
+  for (let y = currentYear - 1; y <= currentYear + 1; y++) {
+    for (let q = 1; q <= 4; q++) {
+      cols.push({
+        id: `${y}-Q${q}`,
+        label: `Q${q} ${y}`,
+        color: QUARTER_COLORS[`Q${q}`],
+        year: y,
+        quarter: `Q${q}`
+      });
+    }
+  }
+  return cols;
+};
 
 const STATUS_COLUMNS = [
   { id: 'Open',         label: 'Open',         color: 'bg-slate-400' },
@@ -39,25 +57,45 @@ export default function RoadmapPage() {
     removeFromRoadmap 
   } = useStore();
   const [view, setView] = useState('quarterly');
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeId, setActiveId] = useState(null);
+  const scrollContainerRef = useRef(null);
   const isAdmin = useAdmin();
 
-  const years = [selectedYear - 1, selectedYear, selectedYear + 1];
+  const quarterColumns = useMemo(() => generateQuarterColumns(), []);
+  
+  const currentQId = useMemo(() => {
+    const now = new Date();
+    const q = Math.floor(now.getMonth() / 3) + 1;
+    return `${now.getFullYear()}-Q${q}`;
+  }, []);
+
+  // Auto-scroll to current quarter
+  useEffect(() => {
+    if (view === 'quarterly' && scrollContainerRef.current) {
+      const currentElement = document.getElementById(`col-${currentQId}`);
+      if (currentElement) {
+        currentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    }
+  }, [view, currentQId]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  const columns = view === 'quarterly' ? QUARTER_COLUMNS : STATUS_COLUMNS;
+  const columns = view === 'quarterly' ? quarterColumns : STATUS_COLUMNS;
 
   // For quarterly view, items per quarter
   // For status view, items per status (using feature status)
   const getColumnItems = (colId) => {
     if (view === 'quarterly') {
       const assignedIds = roadmapItems.map(i => i.featureId);
+      const col = quarterColumns.find(c => c.id === colId);
       
-      // Get manually assigned items for this quarter and selected year
+      // Get manually assigned items for this column
       const manualItems = roadmapItems
-        .filter((i) => i.quarter === colId && (colId === 'Backlog' || i.year === selectedYear))
+        .filter((i) => {
+          if (colId === 'Backlog') return i.quarter === 'Backlog';
+          return i.quarter === col.quarter && i.year === col.year;
+        })
         .sort((a, b) => a.position - b.position);
 
       // Get virtual items (not manually assigned) that match this quarter/year by dueDate
@@ -66,10 +104,18 @@ export default function RoadmapPage() {
         .filter((r) => {
           const res = getQuarterFromDate(r.dueDate);
           const q = res?.quarter || 'Backlog';
-          const y = res?.year || selectedYear;
-          return q === colId && (colId === 'Backlog' || y === selectedYear);
+          const y = res?.year || (col?.year);
+          
+          if (colId === 'Backlog') return q === 'Backlog';
+          return q === col.quarter && y === col.year;
         })
-        .map((r) => ({ id: `virtual-${r.id}`, featureId: r.id, quarter: colId, year: selectedYear, position: 0 }));
+        .map((r) => ({ 
+          id: `virtual-${r.id}`, 
+          featureId: r.id, 
+          quarter: col?.quarter || 'Backlog', 
+          year: col?.year, 
+          position: 0 
+        }));
 
       return [...manualItems, ...virtualItems];
     } else {
@@ -97,14 +143,23 @@ export default function RoadmapPage() {
       if (!activeFeatureId) return;
 
       const overItem = roadmapItems.find((i) => i.id === over.id);
-      const overColumn = QUARTER_COLUMNS.find((c) => c.id === over.id);
-      const targetQuarter = overItem?.quarter || overColumn?.id;
+      const overColumn = quarterColumns.find((c) => c.id === over.id);
+      
+      // Target determination
+      let targetQuarter, targetYear;
+      if (overColumn) {
+        targetQuarter = overColumn.quarter;
+        targetYear = overColumn.year;
+      } else if (overItem) {
+        targetQuarter = overItem.quarter;
+        targetYear = overItem.year;
+      }
 
       if (targetQuarter === 'Backlog') {
         removeFromRoadmap(activeFeatureId);
         updateRequest(activeFeatureId, { dueDate: '' });
       } else if (targetQuarter) {
-        addToRoadmap(activeFeatureId, targetQuarter, selectedYear);
+        addToRoadmap(activeFeatureId, targetQuarter, targetYear);
       }
     } else {
       // Status view: update feature status
@@ -145,22 +200,7 @@ export default function RoadmapPage() {
               <option>TETR</option>
             </Select>
           </div>
-          {view === 'quarterly' && (
-            <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
-              {years.map(y => (
-                <button
-                  key={y}
-                  onClick={() => setSelectedYear(y)}
-                  className={cn(
-                    'px-3 py-1.5 text-xs font-semibold rounded-lg transition-all',
-                    selectedYear === y ? 'bg-white shadow-sm text-teal-700' : 'text-gray-500 hover:text-gray-700'
-                  )}
-                >
-                  {y}
-                </button>
-              ))}
-            </div>
-          )}
+
           <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
             <button
               onClick={() => setView('quarterly')}
@@ -191,16 +231,27 @@ export default function RoadmapPage() {
         onDragStart={isAdmin ? handleDragStart : undefined}
         onDragEnd={isAdmin ? handleDragEnd : undefined}
       >
-        <div className="flex gap-4 overflow-x-auto pb-6">
+        <div 
+          ref={scrollContainerRef}
+          className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide relative"
+        >
           {columns.map((col) => (
-            <RoadmapColumn
-              key={col.id}
-              id={col.id}
-              label={col.label}
-              color={col.color}
-              items={getColumnItems(col.id)}
-              requests={requests}
-            />
+            <div 
+              key={col.id} 
+              id={`col-${col.id}`} 
+              className={cn(
+                "flex-shrink-0",
+                col.id === 'Backlog' && "sticky left-0 z-20 bg-[#F9FAFB] pr-4 shadow-[10px_0_15px_-3px_rgba(0,0,0,0.05)]"
+              )}
+            >
+              <RoadmapColumn
+                id={col.id}
+                label={col.label}
+                color={col.color}
+                items={getColumnItems(col.id)}
+                requests={requests}
+              />
+            </div>
           ))}
         </div>
 
