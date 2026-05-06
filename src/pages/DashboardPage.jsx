@@ -64,8 +64,8 @@ export default function DashboardPage() {
   const filtered = useMemo(() => {
     let res = [...requests];
 
-    // Board Filter (Include unassigned requests in board views)
-    if (boardId) {
+    // Board Filter (Include unassigned requests in board views, but show all if boardId is 'all')
+    if (boardId && boardId !== 'all') {
       res = res.filter(r => r.boardId === boardId || !r.boardId);
     }
 
