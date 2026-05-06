@@ -2,6 +2,7 @@ import { ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../lib/utils';
+import toast from 'react-hot-toast';
 
 export default function VoteButton({ featureId, votes, size = 'md' }) {
   const { toggleVote, votes: userVotes, user } = useStore();
@@ -22,6 +23,11 @@ export default function VoteButton({ featureId, votes, size = 'md' }) {
         if (!user) {
           navigate('/login');
           return;
+        }
+        if (hasVoted) {
+          toast.success('Vote removed');
+        } else {
+          toast.success('Vote added!');
         }
         toggleVote(featureId);
       }}

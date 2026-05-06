@@ -22,6 +22,7 @@ import {
   Copy,
   Link as LinkIcon
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 import { useStore } from '../store/useStore';
 import { Card, Button, Input, StatusBadge, Select } from '../components/ui';
@@ -82,10 +83,12 @@ export default function SettingsPage() {
     setLoading(true);
     try {
       await updateClickupSettings(formData);
+      toast.success('ClickUp configuration saved!');
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
       console.error("Failed to save ClickUp settings:", error);
+      toast.error('Failed to save settings');
     } finally {
       setLoading(false);
     }

@@ -37,6 +37,8 @@ export const useStore = create((set, get) => ({
   releaseNoteLikes: {},
   activeOrgId: null, // Track currently subscribed org
   activeUnsubs: null, // Store active cleanup functions
+  isLoading: false,
+  comments: {},
 
   // ── Auth Actions ───────────────────────────────────────────
   initAuth: () => {
@@ -126,34 +128,35 @@ export const useStore = create((set, get) => ({
     // Clear old data and unsubs if switching orgs
     if (get().activeOrgId && get().activeOrgId !== orgId) {
       if (get().activeUnsubs) get().activeUnsubs();
-      set({ requests: [], boards: [], questionnaires: {}, activeOrgId: orgId, activeUnsubs: null });
+      set({ requests: [], boards: [], questionnaires: {}, activeOrgId: orgId, activeUnsubs: null, isLoading: true });
     } else {
-      set({ activeOrgId: orgId });
+      set({ activeOrgId: orgId, isLoading: true });
     }
 
     // Fail-safe fetch for browsers blocking real-time sync
-    getDocs(query(collection(db, 'requests'), where('orgId', '==', orgId)))
+    const p1 = getDocs(query(collection(db, 'requests'), where('orgId', '==', orgId)))
       .then(snap => {
         if (get().requests.length === 0 && snap.docs.length > 0) {
           set({ requests: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
         }
-      })
-      .catch(err => console.error("Initial data fetch failed:", err));
+      });
 
-    getDocs(query(collection(db, 'boards'), where('orgId', '==', orgId)))
+    const p2 = getDocs(query(collection(db, 'boards'), where('orgId', '==', orgId)))
       .then(snap => {
         if (get().boards.length === 0 && snap.docs.length > 0) {
           set({ boards: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
         }
       });
 
-    // Fail-safe fetch for Roadmap
-    getDocs(query(collection(db, 'roadmap'), where('orgId', '==', orgId)))
+    const p3 = getDocs(query(collection(db, 'roadmap'), where('orgId', '==', orgId)))
       .then(snap => {
         if (get().roadmapItems.length === 0 && snap.docs.length > 0) {
           set({ roadmapItems: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
         }
       });
+
+    // When all initial fetches are done, turn off loader
+    Promise.all([p1, p2, p3]).finally(() => set({ isLoading: false }));
 
     const unsubRequests = onSnapshot(
       query(collection(db, 'requests'), where('orgId', '==', orgId)),
@@ -255,6 +258,30 @@ export const useStore = create((set, get) => ({
 
   removeFromRoadmap: async (id) => {
     await deleteDoc(doc(db, 'roadmap', id));
+  },
+
+  // Comments
+  subscribeToComments: (featureId) => {
+    return onSnapshot(
+      query(collection(db, 'requests', featureId, 'comments'), orderBy('createdAt', 'desc')),
+      (snapshot) => {
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        set(state => ({
+          comments: { ...state.comments, [featureId]: items }
+        }));
+      }
+    );
+  },
+
+  addComment: async (featureId, text, metadata = {}) => {
+    const user = get().user;
+    await addDoc(collection(db, 'requests', featureId, 'comments'), {
+      text,
+      ...metadata,
+      authorId: user?.uid || 'Guest',
+      authorName: user?.displayName || user?.email || 'Guest',
+      createdAt: new Date().toISOString()
+    });
   },
 
   toggleVote: (id) => {

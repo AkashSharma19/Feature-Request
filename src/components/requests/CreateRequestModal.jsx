@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { X, Paperclip, Save, Send, AlertTriangle, ChevronRight, Layout, Upload } from 'lucide-react';
 import { Modal, Button, Input, Textarea, Select, RichTextEditor } from '../ui';
 import { useStore } from '../../store/useStore';
 import { CATEGORIES, cn } from '../../lib/utils';
 import { useAdmin } from '../../lib/useAdmin';
+import toast from 'react-hot-toast';
 
 const PLATFORMS = ['Coach LMS', 'Career Coach', 'Coach Resume'];
 
@@ -112,28 +113,38 @@ export default function CreateRequestModal({ open, onClose, editData = null, for
     return Object.keys(e).length === 0;
   };
 
-  const handleSubmit = (status) => {
+  const handleSubmit = async () => {
     if (!user) {
       navigate('/login');
       return;
     }
     if (!validate()) return;
     
-    const finalData = { 
-      ...form, 
-      orgId: urlOrgId || userOrg?.id,
-      boardId: activeBoardId,
-      status: isEdit ? form.status : 'Open',
-      requestedBy: isEdit ? form.requestedBy : (user?.displayName || user?.email || 'User'),
-      userId: user?.uid || null
-    };
+    setIsSubmitting(true);
+    try {
+      const finalData = { 
+        ...form, 
+        orgId: urlOrgId || userOrg?.id,
+        boardId: activeBoardId || form.boardId,
+        status: isEdit ? form.status : 'Open',
+        requestedBy: isEdit ? form.requestedBy : (user?.displayName || user?.email || 'User'),
+        userId: user?.uid || null
+      };
 
-    if (isEdit) {
-      updateRequest(editData.id, finalData);
-    } else {
-      addRequest(finalData);
+      if (isEdit) {
+        await updateRequest(editData.id, finalData);
+        toast.success('Request updated successfully!');
+      } else {
+        await addRequest(finalData);
+        toast.success('Feature request submitted!');
+      }
+      handleClose();
+    } catch (err) {
+      console.error(err);
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
-    handleClose();
   };
 
   const handleClose = () => {
@@ -186,7 +197,7 @@ export default function CreateRequestModal({ open, onClose, editData = null, for
             {errors.title && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.title}</p>}
           </Field>
 
-          {!forcedBoardId && boards.length > 0 && (
+          {isAdmin && !forcedBoardId && boards.length > 0 && (
             <Field label="Target Board (Optional)">
               <Select
                 value={form.boardId || ''}

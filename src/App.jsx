@@ -10,6 +10,7 @@ import WelcomePage from './pages/WelcomePage';
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import { useStore } from './store/useStore';
+import { Toaster } from 'react-hot-toast';
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, userOrg, isAuthLoading } = useStore();
@@ -37,6 +38,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <Toaster position="top-right" />
       <Routes>
         {/* Public Landing */}
         <Route path="/welcome" element={<WelcomePage />} />

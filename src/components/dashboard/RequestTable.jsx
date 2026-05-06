@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   ChevronUp, Pin, MoreHorizontal, Edit2, Archive, Trash2, GitMerge, CheckSquare
 } from 'lucide-react';
@@ -74,10 +74,15 @@ function MenuItem({ icon: Icon, label, onClick, className }) {
 export default function RequestTable({ requests, onEdit, onReject }) {
   const { toggleVote, votes, togglePin, deleteRequest, updateRequest, user } = useStore();
   const navigate = useNavigate();
+  const { orgId } = useParams();
   const isAdmin = useAdmin();
 
   const handleRowClick = (id) => {
-    navigate(isAdmin ? `/admin/requests/${id}` : `/requests/${id}`);
+    if (isAdmin) {
+      navigate(`/admin/requests/${id}`);
+    } else if (orgId) {
+      navigate(`/b/${orgId}/requests/${id}`);
+    }
   };
 
   const handleVote = (e, id) => {

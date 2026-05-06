@@ -6,10 +6,67 @@ import SummaryCards from '../components/dashboard/SummaryCards';
 import FilterBar from '../components/dashboard/FilterBar';
 import RequestTable from '../components/dashboard/RequestTable';
 import CreateRequestModal from '../components/requests/CreateRequestModal';
-import { Button, Card, Select } from '../components/ui';
+import { Button, Card, Select, Skeleton } from '../components/ui';
 import { useAdmin } from '../lib/useAdmin';
 import { cn } from '../lib/utils';
 
+
+function DashboardSkeleton() {
+  return (
+    <div className="p-6 space-y-6 animate-fade-in">
+      {/* Header Skeleton */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-4">
+          <Skeleton className="w-12 h-12 rounded-2xl" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+        </div>
+      </div>
+
+      {/* Summary Cards Skeleton */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Card key={i} className="p-4">
+            <Skeleton className="w-9 h-9 rounded-xl mb-3" />
+            <Skeleton className="h-8 w-16 mb-1" />
+            <Skeleton className="h-3 w-24" />
+          </Card>
+        ))}
+      </div>
+
+      {/* Filter Bar Skeleton */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row gap-4">
+          <Skeleton className="h-10 flex-1 rounded-xl" />
+          <Skeleton className="h-10 w-32 rounded-xl" />
+          <Skeleton className="h-10 w-32 rounded-xl" />
+          <Skeleton className="h-10 w-32 rounded-xl" />
+        </div>
+      </Card>
+
+      {/* Table Skeleton */}
+      <Card className="overflow-hidden">
+        <div className="p-4 border-b border-gray-50 bg-gray-50/30">
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="p-4 space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex items-center gap-4 py-2 border-b border-gray-50 last:border-0">
+              <Skeleton className="w-12 h-12 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <Skeleton className="h-8 w-20 rounded-xl" />
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
 
 const DEFAULT_FILTERS = { search: '', status: '', category: '', sort: 'votes', scope: 'all' };
 
@@ -17,7 +74,7 @@ export default function DashboardPage() {
   const isAdmin = useAdmin();
   const { orgId: urlOrgId, boardId } = useParams();
   const navigate = useNavigate();
-  const { requests, user, boards, userOrg, subscribeToAll, activeOrgId } = useStore();
+  const { requests, user, boards, userOrg, subscribeToAll, activeOrgId, isLoading } = useStore();
 
   // Handle subscription switching
   useEffect(() => {
@@ -122,7 +179,7 @@ export default function DashboardPage() {
     setEditData(null);
   };
 
-
+  if (isLoading) return <DashboardSkeleton />;
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -145,7 +202,7 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        {(isAdmin || urlOrgId) && (
+        {isAdmin && (
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active View</p>
