@@ -7,7 +7,7 @@ import { useAdmin } from '../../lib/useAdmin';
 export default function Layout() {
   const isAdmin = useAdmin();
   const { pathname } = useLocation();
-  const isWelcome = pathname === '/';
+  const isWelcome = pathname === '/welcome';
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">

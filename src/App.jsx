@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import DashboardPage from './pages/DashboardPage';
 import RequestDetailPage from './pages/RequestDetailPage';
@@ -14,8 +14,10 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           {/* Public Routes */}
-          <Route path="/" element={<WelcomePage />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/welcome" element={<WelcomePage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+
           <Route path="/requests/:id" element={<RequestDetailPage />} />
           <Route path="/roadmap" element={<RoadmapPage />} />
           <Route path="/changelogs" element={<ChangelogsPage />} />
