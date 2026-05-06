@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useParams } from 'react-router-dom';
 import {
   LayoutDashboard, Map, BarChart3, Settings,
   ChevronLeft, ChevronRight, Zap, Star, Megaphone, Mail
@@ -10,21 +10,33 @@ const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/roadmap', label: 'Roadmap', icon: Map },
   { to: '/changelogs', label: 'Changelogs', icon: Megaphone },
-  { to: '/emails', label: 'Emails', icon: Mail },
   { to: '/analytics', label: 'Analytics', icon: BarChart3 },
+
+  { to: '/settings', label: 'Settings', icon: Settings },
 ];
+
 
 import { useAdmin } from '../../lib/useAdmin';
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const isAdmin = useAdmin();
+  const { orgId } = useParams();
+  const location = useLocation();
 
   const getPath = (path) => {
-    if (!isAdmin) return path;
-    if (path === '/dashboard') return '/admin';
-    return `/admin${path}`;
+    if (isAdmin) {
+      if (path === '/dashboard') return '/admin';
+      return `/admin${path}`;
+    }
+    // For Guests, we need to preserve the orgId context
+    if (orgId) {
+      if (path === '/dashboard') return `/b/${orgId}/all`; // Fallback to a 'all' boards view if they click dashboard
+      return `/b/${orgId}${path}`;
+    }
+    return path;
   };
+
 
   return (
     <aside
@@ -63,10 +75,12 @@ export default function Sidebar() {
         )}
         {NAV_ITEMS.filter(item => {
           if (!isAdmin) {
-            return !['Analytics', 'Emails'].includes(item.label);
+            return !['Analytics', 'Settings'].includes(item.label);
           }
           return true;
         }).map(({ to, label, icon: Icon }) => {
+
+
           const path = getPath(to);
           const current = location.pathname;
           
@@ -74,8 +88,8 @@ export default function Sidebar() {
           if (label === 'Dashboard') {
             if (isAdmin) {
               isActive = current === '/admin' || current.startsWith('/admin/requests/');
-            } else {
-              isActive = current === '/dashboard' || current.startsWith('/requests/');
+            } else if (orgId) {
+              isActive = current === `/b/${orgId}/all` || current.includes('/requests/');
             }
           } else {
             isActive = current.startsWith(path);
@@ -110,20 +124,6 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-gray-100">
-        <div className={cn('flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors', collapsed && 'justify-center')}>
-          <div className="w-7 h-7 bg-teal-600 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Star size={12} className="text-white" />
-          </div>
-          {!collapsed && (
-            <div className="animate-fade-in">
-              <p className="text-xs font-semibold text-gray-800">Admin User</p>
-              <p className="text-[10px] text-gray-400">admin@company.com</p>
-            </div>
-          )}
-        </div>
-      </div>
     </aside>
   );
 }

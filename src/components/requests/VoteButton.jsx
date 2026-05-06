@@ -1,9 +1,11 @@
 import { ChevronUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { cn } from '../../lib/utils';
 
 export default function VoteButton({ featureId, votes, size = 'md' }) {
-  const { toggleVote, votes: userVotes } = useStore();
+  const { toggleVote, votes: userVotes, user } = useStore();
+  const navigate = useNavigate();
   const hasVoted = userVotes[featureId];
 
   const sizes = {
@@ -15,7 +17,14 @@ export default function VoteButton({ featureId, votes, size = 'md' }) {
 
   return (
     <button
-      onClick={() => toggleVote(featureId)}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+        toggleVote(featureId);
+      }}
       className={cn(
         'flex flex-col items-center rounded-xl font-semibold border transition-all duration-200 cursor-pointer',
         hasVoted

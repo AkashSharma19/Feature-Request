@@ -1,19 +1,19 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronUp, GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { StatusBadge, ProgressBar } from '../ui';
 import { useStore } from '../../store/useStore';
-import { useAdmin } from '../../lib/useAdmin';
 import { formatDate, cn } from '../../lib/utils';
 
-export default function RoadmapCard({ item, feature, isOverlay }) {
+export default function RoadmapCard({ item, feature, isOverlay, isAdmin }) {
   const navigate = useNavigate();
-  const isAdmin = useAdmin();
+  const { orgId: urlOrgId } = useParams();
   const { toggleVote, votes } = useStore();
   const {
     attributes, listeners, setNodeRef, transform, transition, isDragging,
   } = useSortable({ id: item.id, disabled: !isAdmin || isOverlay });
+
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -47,7 +47,7 @@ export default function RoadmapCard({ item, feature, isOverlay }) {
         <div className="flex-1 min-w-0">
           <p
             className="text-sm font-semibold text-gray-800 line-clamp-2 cursor-pointer hover:text-teal-600 transition-colors"
-            onClick={() => navigate(`/requests/${feature.id}`)}
+            onClick={() => navigate(isAdmin ? `/admin/requests/${feature.id}` : `/b/${urlOrgId}/requests/${feature.id}`)}
           >
             {feature.title}
           </p>

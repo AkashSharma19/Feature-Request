@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Edit2, Archive, Trash2, Pin, ChevronDown,
@@ -111,11 +111,20 @@ function ReleaseNoteModal({ open, onClose, onConfirm, defaultValues }) {
 }
 
 export default function RequestDetailPage() {
-  const { id } = useParams();
+  const { orgId: urlOrgId, id } = useParams();
   const navigate = useNavigate();
-  const { requests, updateRequest, deleteRequest, togglePin, clickupSettings, setClickupSettings } = useStore();
+  const { requests, updateRequest, deleteRequest, togglePin, clickupSettings, setClickupSettings, userOrg, subscribeToAll, activeOrgId } = useStore();
   const request = requests.find((r) => r.id === id);
   const isAdmin = useAdmin();
+
+  // Handle subscription switching
+  useEffect(() => {
+    const targetOrgId = urlOrgId || userOrg?.id;
+    if (targetOrgId && activeOrgId !== targetOrgId) {
+      const unsub = subscribeToAll(targetOrgId);
+      return () => unsub && unsub();
+    }
+  }, [urlOrgId, userOrg, subscribeToAll, activeOrgId]);
 
   const [activeTab, setActiveTab] = useState('Overview');
   const [showEdit, setShowEdit] = useState(false);
@@ -128,11 +137,12 @@ export default function RequestDetailPage() {
   const [progressEdit, setProgressEdit] = useState(false);
   const [progressVal, setProgressVal] = useState(request?.progress ?? 0);
 
+
   if (!request) {
     return (
       <div className="flex flex-col items-center justify-center h-full py-32">
         <p className="text-gray-500 font-medium text-lg">Request not found</p>
-        <Button variant="secondary" className="mt-4" onClick={() => navigate(isAdmin ? '/admin' : '/dashboard')}>
+        <Button variant="secondary" className="mt-4" onClick={() => navigate(isAdmin ? '/admin' : (urlOrgId ? `/b/${urlOrgId}/all` : '/login'))}>
           <ArrowLeft size={14} /> Back to Dashboard
         </Button>
       </div>
@@ -143,11 +153,24 @@ export default function RequestDetailPage() {
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
       {/* Back */}
       <button
-        onClick={() => navigate(isAdmin ? '/admin' : '/dashboard')}
+        onClick={() => {
+          if (isAdmin) {
+            navigate('/admin');
+            return;
+          }
+          const org = urlOrgId || userOrg?.id;
+          if (request.boardId && org) {
+            navigate(`/b/${org}/${request.boardId}`);
+          } else {
+            navigate(org ? `/b/${org}/all` : '/login');
+          }
+        }}
         className="flex items-center gap-2 text-sm text-gray-400 hover:text-teal-600 mb-5 transition-colors"
       >
-        <ArrowLeft size={15} /> Back to Dashboard
+        <ArrowLeft size={15} /> Back to {request.boardId ? 'Board' : 'Dashboard'}
       </button>
+
+
 
       {/* Action Needed Banner */}
       {request.actionNeeded && (
@@ -224,7 +247,13 @@ export default function RequestDetailPage() {
                           onClick={async () => {
                             setIsSyncing(true);
                             try {
-                              const res = await fetchClickUpTask(request.clickupTaskId, clickupSettings.apiKey, clickupSettings.teamId);
+                              const res = await fetchClickUpTask(
+                                request.clickupTaskId, 
+                                clickupSettings.apiKey, 
+                                clickupSettings.teamId,
+                                clickupSettings.statusMap
+                              );
+
                               if (res) {
                                 if (res.status) {
                                   updateRequest(request.id, { status: res.status, updatedBy: 'ClickUp' });

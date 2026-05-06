@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragOverlay,
 } from '@dnd-kit/core';
@@ -48,18 +49,34 @@ const STATUS_COLUMNS = [
 ];
 
 export default function RoadmapPage() {
+  const { orgId: urlOrgId } = useParams();
+  const navigate = useNavigate();
   const { 
     requests, 
     roadmapItems, 
     moveRoadmapItem, 
     updateRequest, 
     addToRoadmap, 
-    removeFromRoadmap 
+    removeFromRoadmap,
+    userOrg,
+    subscribeToAll,
+    boards,
+    activeOrgId
   } = useStore();
+
   const [view, setView] = useState('quarterly');
   const [activeId, setActiveId] = useState(null);
   const scrollContainerRef = useRef(null);
   const isAdmin = useAdmin();
+
+  // Handle subscription switching
+  useEffect(() => {
+    const targetOrgId = urlOrgId || userOrg?.id;
+    if (targetOrgId && activeOrgId !== targetOrgId) {
+      const unsub = subscribeToAll(targetOrgId);
+      return () => unsub && unsub();
+    }
+  }, [urlOrgId, userOrg, subscribeToAll, activeOrgId]);
 
   const quarterColumns = useMemo(() => generateQuarterColumns(), []);
   
@@ -68,6 +85,7 @@ export default function RoadmapPage() {
     const q = Math.floor(now.getMonth() / 3) + 1;
     return `${now.getFullYear()}-Q${q}`;
   }, []);
+
 
   // Auto-scroll to current quarter
   useEffect(() => {
@@ -192,14 +210,23 @@ export default function RoadmapPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          {/* Organization Switcher */}
-          <div className="w-40">
-            <Select className="py-1.5 text-xs font-medium text-gray-700 bg-white border-gray-200">
-              <option>All Organizations</option>
-              <option>Masters' Union</option>
-              <option>TETR</option>
-            </Select>
-          </div>
+          {isAdmin && (
+            <div className="w-48">
+              <Select 
+                value="" 
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) navigate(`/b/${userOrg?.id}/${val}`);
+                }}
+                className="py-1.5 text-xs font-bold text-gray-700 bg-white border-gray-200 shadow-sm hover:border-teal-300 transition-all cursor-pointer"
+              >
+                <option value="">Switch Board...</option>
+                {boards.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </Select>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
             <button
@@ -226,7 +253,7 @@ export default function RoadmapPage() {
 
       {/* Board */}
       <DndContext
-        sensors={sensors}
+        sensors={isAdmin ? sensors : []}
         collisionDetection={closestCenter}
         onDragStart={isAdmin ? handleDragStart : undefined}
         onDragEnd={isAdmin ? handleDragEnd : undefined}
@@ -250,10 +277,12 @@ export default function RoadmapPage() {
                 color={col.color}
                 items={getColumnItems(col.id)}
                 requests={requests}
+                isAdmin={isAdmin}
               />
             </div>
           ))}
         </div>
+
 
         <DragOverlay dropAnimation={null}>
           {activeFeature && activeItem ? (

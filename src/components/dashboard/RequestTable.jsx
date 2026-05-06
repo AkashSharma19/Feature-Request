@@ -72,12 +72,21 @@ function MenuItem({ icon: Icon, label, onClick, className }) {
 }
 
 export default function RequestTable({ requests, onEdit, onReject }) {
-  const { toggleVote, votes, togglePin, deleteRequest, updateRequest } = useStore();
+  const { toggleVote, votes, togglePin, deleteRequest, updateRequest, user } = useStore();
   const navigate = useNavigate();
   const isAdmin = useAdmin();
 
   const handleRowClick = (id) => {
     navigate(isAdmin ? `/admin/requests/${id}` : `/requests/${id}`);
+  };
+
+  const handleVote = (e, id) => {
+    e.stopPropagation();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    toggleVote(id);
   };
 
   if (requests.length === 0) {
@@ -151,7 +160,7 @@ export default function RequestTable({ requests, onEdit, onReject }) {
               {/* Votes */}
               <td className="px-4 py-3">
                 <button
-                  onClick={(e) => { e.stopPropagation(); toggleVote(req.id); }}
+                  onClick={(e) => handleVote(e, req.id)}
                   className={cn(
                     'flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all',
                     votes[req.id]

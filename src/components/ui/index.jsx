@@ -16,27 +16,29 @@ export function Badge({ children, className, variant = 'default' }) {
 
 export function StatusBadge({ status }) {
   const cfg = {
-    Submitted:   'bg-slate-100 text-slate-700 border-slate-200',
-    Reviewing:   'bg-blue-50 text-blue-700 border-blue-200',
-    Planned:     'bg-indigo-50 text-indigo-700 border-indigo-200',
-    Designing:   'bg-purple-50 text-purple-700 border-purple-200',
-    Development: 'bg-orange-50 text-orange-700 border-orange-200',
-    Testing:     'bg-yellow-50 text-yellow-700 border-yellow-200',
-    Released:    'bg-green-50 text-green-700 border-green-200',
-    Rejected:    'bg-red-50 text-red-700 border-red-200',
+    'Open':           'bg-slate-100 text-slate-700 border-slate-200',
+    'In Progress':    'bg-blue-50 text-blue-700 border-blue-200',
+    'In Design':      'bg-purple-50 text-purple-700 border-purple-200',
+    'Under Review':   'bg-indigo-50 text-indigo-700 border-indigo-200',
+    'Development':    'bg-orange-50 text-orange-700 border-orange-200',
+    'Testing':        'bg-yellow-50 text-yellow-700 border-yellow-200',
+    'Tested':         'bg-emerald-50 text-emerald-700 border-emerald-200',
+    'Closed':         'bg-green-50 text-green-700 border-green-200',
+    'Cancelled':      'bg-red-50 text-red-700 border-red-200',
   };
   const dots = {
-    Submitted: 'bg-slate-400', Reviewing: 'bg-blue-500', Planned: 'bg-indigo-500',
-    Designing: 'bg-purple-500', Development: 'bg-orange-500', Testing: 'bg-yellow-500',
-    Released: 'bg-green-500', Rejected: 'bg-red-500',
+    'Open': 'bg-slate-400', 'In Progress': 'bg-blue-500', 'In Design': 'bg-purple-500',
+    'Under Review': 'bg-indigo-500', 'Development': 'bg-orange-500', 'Testing': 'bg-yellow-500',
+    'Tested': 'bg-emerald-500', 'Closed': 'bg-green-500', 'Cancelled': 'bg-red-500',
   };
   return (
-    <Badge className={cfg[status] || cfg.Submitted}>
-      <span className={cn('w-1.5 h-1.5 rounded-full', dots[status] || dots.Submitted)} />
+    <Badge className={cfg[status] || cfg.Open}>
+      <span className={cn('w-1.5 h-1.5 rounded-full', dots[status] || dots.Open)} />
       {status}
     </Badge>
   );
 }
+
 
 
 export function ProgressBar({ value = 0, className }) {
@@ -164,4 +166,29 @@ export function Spinner({ size = 20 }) {
     </svg>
   );
 }
+export function Switch({ checked, onChange, disabled }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        checked ? "bg-teal-600" : "bg-gray-200"
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+          checked ? "translate-x-4" : "translate-x-0"
+        )}
+      />
+    </button>
+  );
+}
+
 export { default as RichTextEditor } from './RichTextEditor';
+

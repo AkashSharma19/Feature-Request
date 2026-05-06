@@ -3,33 +3,17 @@
  * Maps ClickUp status names (case-insensitive) to our local application statuses.
  * Adjust these based on your ClickUp status names.
  */
-const CLICKUP_STATUS_MAP = {
-  'open': 'Open',
-  'to do': 'Open',
-  'in progress': 'In Progress',
-  'in design': 'In Design',
-  'under review': 'Under Review',
-  'review': 'Under Review',
-  'development': 'Development',
-  'dev': 'Development',
-  'testing': 'Testing',
-  'qa': 'Testing',
-  'tested': 'Tested',
-  'complete': 'Closed',
-  'closed': 'Closed',
-  'done': 'Closed',
-  'canceled': 'Cancelled',
-  'cancelled': 'Cancelled'
-};
-
 /**
  * Fetch task status from ClickUp API
  * @param {string} taskId - The ClickUp Task ID
  * @param {string} apiKey - Your ClickUp API Key
+ * @param {string} teamId - Your ClickUp Team ID
+ * @param {Object} statusMap - Dynamic status mapping from settings
  * @returns {Promise<{ status: string, name: string } | null>}
  */
-export async function fetchClickUpTask(taskId, apiKey, teamId = null) {
+export async function fetchClickUpTask(taskId, apiKey, teamId = null, statusMap = {}) {
   if (!taskId || !apiKey) return null;
+
   
   const cleanId = taskId.replace('#', '').trim();
   // If ID contains a hyphen, it's likely a custom task ID
@@ -56,15 +40,19 @@ export async function fetchClickUpTask(taskId, apiKey, teamId = null) {
     const data = await response.json();
     const rawStatus = data.status?.status?.toLowerCase() || '';
     
-    // Try exact match, then partial match
-    let mappedStatus = CLICKUP_STATUS_MAP[rawStatus];
+    // Find which local status matches this rawStatus based on the provided map
+    let mappedStatus = null;
     
-    if (!mappedStatus) {
-      // Try finding a key that is contained in the raw status or vice versa
-      const match = Object.keys(CLICKUP_STATUS_MAP).find(key => 
-        rawStatus.includes(key) || key.includes(rawStatus)
-      );
-      mappedStatus = match ? CLICKUP_STATUS_MAP[match] : null;
+    for (const [localStatus, clickupStatuses] of Object.entries(statusMap)) {
+      // clickupStatuses is expected to be a string like "to do, in progress" or an array
+      const targets = Array.isArray(clickupStatuses) 
+        ? clickupStatuses 
+        : clickupStatuses.split(',').map(s => s.trim().toLowerCase());
+        
+      if (targets.includes(rawStatus)) {
+        mappedStatus = localStatus;
+        break;
+      }
     }
     
     return {

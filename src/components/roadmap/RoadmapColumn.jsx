@@ -3,8 +3,11 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import RoadmapCard from './RoadmapCard';
 import { cn } from '../../lib/utils';
 
-export default function RoadmapColumn({ id, label, color, items, requests }) {
-  const { setNodeRef, isOver } = useDroppable({ id });
+export default function RoadmapColumn({ id, label, color, items, requests, isAdmin }) {
+  const { setNodeRef, isOver } = useDroppable({ 
+    id,
+    disabled: !isAdmin
+  });
 
   return (
     <div
@@ -38,7 +41,7 @@ export default function RoadmapColumn({ id, label, color, items, requests }) {
           {items.map((item) => {
             const feature = requests.find((r) => r.id === item.featureId);
             return (
-              <RoadmapCard key={item.id} item={item} feature={feature} />
+              <RoadmapCard key={item.id} item={item} feature={feature} isAdmin={isAdmin} />
             );
           })}
         </SortableContext>

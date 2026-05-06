@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Send, Lock, AlertCircle } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Textarea, Button } from '../ui';
@@ -6,12 +6,20 @@ import { useAdmin } from '../../lib/useAdmin';
 import { timeAgo, cn } from '../../lib/utils';
 
 export default function CommentsSection({ featureId }) {
-  const { comments, addComment } = useStore();
+  const { comments, addComment, subscribeToComments, user } = useStore();
   const isAdmin = useAdmin();
+
+  useEffect(() => {
+    if (!featureId) return;
+    const unsub = subscribeToComments(featureId);
+    return () => unsub();
+  }, [featureId, subscribeToComments]);
+
   const featureComments = comments[featureId] || [];
   const [text, setText] = useState('');
   const [isInternal, setIsInternal] = useState(false);
   const [actionNeeded, setActionNeeded] = useState(false);
+
 
   const handleSubmit = () => {
     if (!text.trim()) return;
@@ -64,59 +72,68 @@ export default function CommentsSection({ featureId }) {
       )}
 
       {/* Input */}
-      <div className="border border-gray-200 rounded-xl overflow-hidden">
-        <Textarea
-          rows={3}
-          placeholder={isInternal ? 'Add an internal admin note (not visible to users)…' : 'Add a comment…'}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          className="border-0 rounded-none focus:ring-0 resize-none"
-        />
-        <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-gray-50/50 border-t border-gray-100">
-          <div className="flex items-center gap-2">
-            {isAdmin && (
-              <>
-                <button
-                  onClick={() => setIsInternal(!isInternal)}
-                  className={cn(
-                    'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all',
-                    isInternal
-                      ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                      : 'bg-gray-100 text-gray-500 hover:bg-amber-50 hover:text-amber-600'
-                  )}
-                >
-                  <Lock size={11} />
-                  {isInternal ? 'Internal Note' : 'Mark as Internal'}
-                </button>
-
-                {!isInternal && (
-                  <button
-                    onClick={() => setActionNeeded(!actionNeeded)}
-                    className={cn(
-                      'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all',
-                      actionNeeded
-                        ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                        : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-600'
-                    )}
-                  >
-                    <AlertCircle size={11} />
-                    {actionNeeded ? 'Action Needed' : 'Request Action'}
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleSubmit}
-            disabled={!text.trim()}
-          >
-            <Send size={12} />
-            Post
+      {!user ? (
+        <div className="p-4 bg-gray-50 border border-gray-100 rounded-xl text-center">
+          <p className="text-sm text-gray-500 mb-3 font-medium">Log in to join the conversation</p>
+          <Button variant="primary" size="sm" onClick={() => window.location.href = '/login'}>
+            Log in to Comment
           </Button>
         </div>
-      </div>
+      ) : (
+        <div className="border border-gray-200 rounded-xl overflow-hidden">
+          <Textarea
+            rows={3}
+            placeholder={isInternal ? 'Add an internal admin note (not visible to users)…' : 'Add a comment…'}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="border-0 rounded-none focus:ring-0 resize-none"
+          />
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 bg-gray-50/50 border-t border-gray-100">
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <>
+                  <button
+                    onClick={() => setIsInternal(!isInternal)}
+                    className={cn(
+                      'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all',
+                      isInternal
+                        ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                        : 'bg-gray-100 text-gray-500 hover:bg-amber-50 hover:text-amber-600'
+                    )}
+                  >
+                    <Lock size={11} />
+                    {isInternal ? 'Internal Note' : 'Mark as Internal'}
+                  </button>
+
+                  {!isInternal && (
+                    <button
+                      onClick={() => setActionNeeded(!actionNeeded)}
+                      className={cn(
+                        'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all',
+                        actionNeeded
+                          ? 'bg-orange-100 text-orange-700 border border-orange-200'
+                          : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-600'
+                      )}
+                    >
+                      <AlertCircle size={11} />
+                      {actionNeeded ? 'Action Needed' : 'Request Action'}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={handleSubmit}
+              disabled={!text.trim()}
+            >
+              <Send size={12} />
+              Post
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

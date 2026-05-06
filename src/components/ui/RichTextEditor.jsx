@@ -1,11 +1,13 @@
+import { useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import { 
   Bold, Italic, List, ListOrdered, Image as ImageIcon, 
-  Heading1, Heading2, Quote, Undo, Redo 
+  Heading1, Heading2, Quote, Undo, Redo, Loader2
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { uploadFile } from '../../lib/storage';
 
 const MenuButton = ({ onClick, isActive, disabled, children, title }) => (
   <button
@@ -24,12 +26,14 @@ const MenuButton = ({ onClick, isActive, disabled, children, title }) => (
 );
 
 export default function RichTextEditor({ value, onChange, placeholder }) {
+  const [uploading, setUploading] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Image.configure({
         inline: true,
-        allowBase64: true,
+        allowBase64: true, // Keep fallback support
       }),
     ],
     content: value,
@@ -49,18 +53,26 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          editor.chain().focus().setImage({ src: event.target.result }).run();
-        };
-        reader.readAsDataURL(file);
+        try {
+          setUploading(true);
+          const url = await uploadFile(file, 'editor-images');
+          if (url) {
+            editor.chain().focus().setImage({ src: url }).run();
+          }
+        } catch (error) {
+          console.error("Failed to upload image:", error);
+          alert("Failed to upload image. Please check your Firebase configuration.");
+        } finally {
+          setUploading(false);
+        }
       }
     };
     input.click();
   };
+
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden bg-white focus-within:border-teal-300 focus-within:ring-1 focus-within:ring-teal-500/10 transition-all">
@@ -119,9 +131,10 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
         </MenuButton>
         <MenuButton
           onClick={addImage}
-          title="Insert Image"
+          disabled={uploading}
+          title={uploading ? "Uploading..." : "Insert Image"}
         >
-          <ImageIcon size={16} />
+          {uploading ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
         </MenuButton>
         <div className="ml-auto flex items-center">
           <MenuButton

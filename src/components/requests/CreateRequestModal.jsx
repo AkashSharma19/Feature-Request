@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
-import { X, Paperclip, Save, Send } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
+import { X, Paperclip, Save, Send, AlertTriangle, ChevronRight, Layout, Upload } from 'lucide-react';
 import { Modal, Button, Input, Textarea, Select, RichTextEditor } from '../ui';
 import { useStore } from '../../store/useStore';
 import { CATEGORIES, cn } from '../../lib/utils';
 import { useAdmin } from '../../lib/useAdmin';
-import { AlertTriangle, ChevronRight, Vote } from 'lucide-react';
 
 const PLATFORMS = ['Coach LMS', 'Career Coach', 'Coach Resume'];
 
@@ -22,6 +22,8 @@ const INITIAL = {
   deadline: '',
   clickupTaskId: '',
   attachments: [],
+  boardId: null,
+  responses: {}, // Dynamic questionnaire answers
 };
 
 function Field({ label, required, children }) {
@@ -35,12 +37,18 @@ function Field({ label, required, children }) {
   );
 }
 
-export default function CreateRequestModal({ open, onClose, editData = null }) {
-  const { addRequest, updateRequest, requests, toggleVote, votes } = useStore();
+export default function CreateRequestModal({ open, onClose, editData = null, forcedBoardId = null }) {
+  const { orgId: urlOrgId } = useParams();
+  const { addRequest, updateRequest, requests, toggleVote, votes, boards, questionnaires, user, userOrg } = useStore();
   const [form, setForm] = useState(INITIAL);
   const [errors, setErrors] = useState({});
   const [similarRequests, setSimilarRequests] = useState([]);
   const isAdmin = useAdmin();
+
+  // Load questionnaire for active board
+  const activeBoardId = forcedBoardId || form.boardId;
+  const activeBoard = boards.find(b => b.id === activeBoardId);
+  const fields = questionnaires[activeBoardId] || [];
 
   useEffect(() => {
     if (open) {
@@ -51,11 +59,14 @@ export default function CreateRequestModal({ open, onClose, editData = null }) {
           attachments: editData.attachments || []
         });
       } else {
-        setForm(INITIAL);
+        // Default to the first available board if not forced
+        const defaultBoardId = forcedBoardId || (boards.length > 0 ? boards[0].id : null);
+        setForm({ ...INITIAL, boardId: defaultBoardId });
       }
       setSimilarRequests([]);
     }
-  }, [open, editData]);
+  }, [open, editData, forcedBoardId, boards]);
+
 
   const isEdit = !!editData;
 
@@ -76,20 +87,51 @@ export default function CreateRequestModal({ open, onClose, editData = null }) {
     if (errors[key]) setErrors((e) => ({ ...e, [key]: '' }));
   };
 
+  const setResponse = (fieldId, val) => {
+    setForm(f => ({
+      ...f,
+      responses: { ...f.responses, [fieldId]: val }
+    }));
+  };
+
   const validate = () => {
     const e = {};
+    
+    // Core fields are always required
     if (!form.title.trim()) e.title = 'Title is required';
     if (!form.description.trim()) e.description = 'Description is required';
+    
+    // Validate required questionnaire fields
+    fields.forEach(f => {
+      if (f.required && !form.responses[f.id]) {
+        e[f.id] = `${f.label} is required`;
+      }
+    });
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   const handleSubmit = (status) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
     if (!validate()) return;
+    
+    const finalData = { 
+      ...form, 
+      orgId: urlOrgId || userOrg?.id,
+      boardId: activeBoardId,
+      status: isEdit ? form.status : 'Open',
+      requestedBy: isEdit ? form.requestedBy : (user?.displayName || user?.email || 'User'),
+      userId: user?.uid || null
+    };
+
     if (isEdit) {
-      updateRequest(editData.id, { ...form, status: status === 'draft' ? 'Open' : form.status });
+      updateRequest(editData.id, finalData);
     } else {
-      addRequest({ ...form, status: status === 'draft' ? 'Open' : 'Open' });
+      addRequest(finalData);
     }
     handleClose();
   };
@@ -106,11 +148,20 @@ export default function CreateRequestModal({ open, onClose, editData = null }) {
     <Modal open={open} onClose={handleClose} size="lg">
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-        <div>
-          <h2 className="text-base font-bold text-gray-900">
-            {isEdit ? 'Edit Feature Request' : 'New Feature Request'}
-          </h2>
-          <p className="text-xs text-gray-400 mt-0.5">Fill in the details below to {isEdit ? 'update' : 'submit'} your request</p>
+        <div className="flex items-center gap-3">
+          {activeBoard && (
+            <div className="w-8 h-8 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center">
+              <Layout size={16} />
+            </div>
+          )}
+          <div>
+            <h2 className="text-base font-bold text-gray-900">
+              {isEdit ? 'Edit Request' : activeBoard ? `Submit to ${activeBoard.name}` : 'New Feature Request'}
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {activeBoard ? `Help us improve ${activeBoard.name}` : 'Fill in the details below'}
+            </p>
+          </div>
         </div>
         <button
           onClick={handleClose}
@@ -121,188 +172,133 @@ export default function CreateRequestModal({ open, onClose, editData = null }) {
       </div>
 
       {/* Body */}
-      <div className="px-6 py-5 max-h-[70vh] overflow-y-auto space-y-5">
-        {/* Platform */}
-        <Field label="Platform" required>
-          <div className="flex gap-2">
-            {PLATFORMS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => set('platform', p)}
-                className={`flex-1 py-2 text-xs font-semibold rounded-xl border transition-all ${
-                  form.platform === p
-                    ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-teal-300 hover:text-teal-600'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </Field>
-
-        {/* Category */}
-        <Field label="Category">
-          <Select value={form.category} onChange={(e) => set('category', e.target.value)}>
-            {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
-          </Select>
-        </Field>
-
-        {/* Title */}
-        <Field label="Feature Title" required>
-          <Input
-            placeholder="e.g. Dark mode support for all screens"
-            value={form.title}
-            onChange={(e) => set('title', e.target.value)}
-            className={errors.title ? 'border-red-400 focus:border-red-400' : ''}
-          />
-          {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
-
-          {similarRequests.length > 0 && (
-            <div className="mt-3 p-3 bg-orange-50 border border-orange-100 rounded-xl animate-fade-in">
-              <div className="flex items-center gap-2 text-orange-700 font-bold text-xs mb-2">
-                <AlertTriangle size={14} />
-                Similar requests already exist
-              </div>
-              <div className="space-y-2">
-                {similarRequests.map(r => (
-                  <div key={r.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-orange-100/50 shadow-sm">
-                    <div className="flex-1 min-w-0 mr-3">
-                      <p className="text-[11px] font-semibold text-gray-800 truncate">{r.title}</p>
-                      <p className="text-[10px] text-gray-500">{r.votes} votes • {r.status}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => toggleVote(r.id)}
-                      className={cn(
-                        "flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold transition-all",
-                        votes[r.id] ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-teal-50"
-                      )}
-                    >
-                      <ChevronRight size={10} />
-                      Upvote
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[10px] text-orange-600 mt-2 italic">Consider upvoting these instead of creating a duplicate.</p>
-            </div>
-          )}
-        </Field>
-
-        {/* Description */}
-        <Field label="Description" required>
-          <RichTextEditor
-            value={form.description}
-            onChange={(val) => set('description', val)}
-            placeholder="Describe the feature in detail…"
-          />
-          {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
-        </Field>
-
-        {/* Problem + Impact */}
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Problem It Solves">
-            <Textarea
-              rows={3}
-              placeholder="What pain point does this address?"
-              value={form.problem}
-              onChange={(e) => set('problem', e.target.value)}
-            />
-          </Field>
-          <Field label="Expected Impact">
-            <Textarea
-              rows={3}
-              placeholder="Estimated business / user impact…"
-              value={form.impact}
-              onChange={(e) => set('impact', e.target.value)}
-            />
-          </Field>
-        </div>
-
-        {/* Dates & Status */}
-        <div className={cn("grid gap-4", isEdit && !isAdmin ? "grid-cols-2" : "grid-cols-1")}>
-          <Field label="By when you need this?">
+      <div className="px-6 py-5 max-h-[70vh] overflow-y-auto space-y-6">
+        
+        {/* Core Fields (Always Visible) */}
+        <div className="space-y-5">
+          <Field label="Short Summary / Title" required>
             <Input
-              type="date"
-              value={form.dueDate}
-              onChange={(e) => set('dueDate', e.target.value)}
+              placeholder="Give your feedback a clear title"
+              value={form.title}
+              onChange={(e) => set('title', e.target.value)}
+              className={errors.title ? 'border-red-400 focus:border-red-400' : ''}
             />
+            {errors.title && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.title}</p>}
           </Field>
 
-          {isEdit && !isAdmin && (
-            <Field label="Status">
-              <Select value={form.status} onChange={(e) => set('status', e.target.value)}>
-                {['Open', 'In Progress', 'In Design', 'Under Review', 'Development', 'Testing', 'Tested', 'Closed', 'Cancelled'].map((s) => (
-                  <option key={s}>{s}</option>
+          {!forcedBoardId && boards.length > 0 && (
+            <Field label="Target Board (Optional)">
+              <Select
+                value={form.boardId || ''}
+                onChange={(e) => set('boardId', e.target.value)}
+              >
+                <option value="">No Board (Main Feed Only)</option>
+                {boards.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </Select>
+              <p className="text-[10px] text-gray-400 mt-1">Choose which board this request belongs to.</p>
             </Field>
           )}
+
+          <Field label="Category" required>
+            <Select
+              value={form.category}
+              onChange={(e) => set('category', e.target.value)}
+            >
+              {CATEGORIES.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field label="Detailed Context" required>
+            <RichTextEditor
+              value={form.description}
+              onChange={(val) => set('description', val)}
+              placeholder="Provide more details here…"
+            />
+            {errors.description && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.description}</p>}
+          </Field>
+
         </div>
 
-        {/* ClickUp Integration */}
-        <Field label="ClickUp Task ID (Optional)">
-          <div className="relative">
-            <Input
-              placeholder="e.g. 867xhzabc"
-              value={form.clickupTaskId || ''}
-              onChange={(e) => set('clickupTaskId', e.target.value)}
-              className="pl-9"
-            />
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 bg-teal-600 rounded flex items-center justify-center text-[8px] font-bold text-white">
-              CU
-            </div>
-          </div>
-          <p className="text-[10px] text-gray-400 mt-1">Link this request to a ClickUp task for status syncing</p>
-        </Field>
-
-        {/* Attachments */}
-        <Field label="Attachments">
-          <input 
-            type="file" 
-            id="file-upload" 
-            className="hidden" 
-            multiple 
-            onChange={(e) => {
-              const files = Array.from(e.target.files).map(f => ({
-                id: `att-${Date.now()}-${f.name}`,
-                name: f.name,
-                size: f.size,
-                type: f.type,
-                url: '#', // Mock URL
-              }));
-              set('attachments', [...form.attachments, ...files]);
-            }}
-          />
-          <div className="flex flex-wrap gap-2">
-            <label 
-              htmlFor="file-upload"
-              className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-xs font-medium text-gray-500 hover:bg-gray-100 hover:border-teal-300 hover:text-teal-600 cursor-pointer transition-all"
-            >
-              <Paperclip size={14} /> Add Files
-            </label>
-            {(form.attachments || []).map((file) => (
-              <div key={file.id} className="flex items-center gap-2 px-3 py-2 bg-teal-50 border border-teal-100 rounded-xl text-xs font-medium text-teal-700">
-                <span className="truncate max-w-[120px]">{file.name}</span>
-                <button onClick={() => set('attachments', (form.attachments || []).filter(f => f.id !== file.id))}>
-                  <X size={12} className="hover:text-red-500" />
-                </button>
-              </div>
+        {/* Dynamic Questionnaire Fields */}
+        {fields.length > 0 && (
+          <div className="space-y-5 p-4 bg-teal-50/30 rounded-2xl border border-teal-100/50">
+            <p className="text-[10px] font-bold text-teal-600 uppercase tracking-widest mb-2">Additional Information</p>
+            {fields.map(f => (
+              <Field key={f.id} label={f.label} required={f.required}>
+                {f.type === 'text' && (
+                  <Input 
+                    value={form.responses[f.id] || ''} 
+                    onChange={(e) => setResponse(f.id, e.target.value)}
+                    placeholder="Type your answer..."
+                  />
+                )}
+                {f.type === 'textarea' && (
+                  <Textarea 
+                    value={form.responses[f.id] || ''} 
+                    onChange={(e) => setResponse(f.id, e.target.value)}
+                    placeholder="Share your thoughts..."
+                    rows={3}
+                  />
+                )}
+                {f.type === 'select' && (
+                  <Select 
+                    value={form.responses[f.id] || ''} 
+                    onChange={(e) => setResponse(f.id, e.target.value)}
+                  >
+                    <option value="">Select an option</option>
+                    {f.options.split(',').map(opt => (
+                      <option key={opt.trim()} value={opt.trim()}>{opt.trim()}</option>
+                    ))}
+                  </Select>
+                )}
+                {f.type === 'upload' && (
+                  <div className="flex flex-col gap-2">
+                    <label className="flex items-center justify-center gap-2 px-4 py-4 bg-white border border-dashed border-gray-200 rounded-xl text-xs font-medium text-gray-500 hover:border-teal-400 hover:text-teal-600 cursor-pointer transition-all">
+                      <Upload size={14} /> {form.responses[f.id] ? 'File Attached' : 'Click to Upload'}
+                      <input type="file" className="hidden" onChange={(e) => setResponse(f.id, e.target.files[0]?.name || '')} />
+                    </label>
+                    {form.responses[f.id] && <p className="text-[10px] text-teal-600 italic">File: {form.responses[f.id]}</p>}
+                  </div>
+                )}
+                {errors[f.id] && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors[f.id]}</p>}
+              </Field>
             ))}
           </div>
-        </Field>
+        )}
+
+
+        {/* Similar Requests */}
+        {similarRequests.length > 0 && (
+          <div className="p-3 bg-orange-50 border border-orange-100 rounded-xl animate-fade-in">
+            <div className="flex items-center gap-2 text-orange-700 font-bold text-[10px] uppercase tracking-wider mb-2">
+              <AlertTriangle size={14} /> Similar items already exist
+            </div>
+            <div className="space-y-2">
+              {similarRequests.map(r => (
+                <div key={r.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-orange-100/50 shadow-sm">
+                  <div className="flex-1 min-w-0 mr-3">
+                    <p className="text-[11px] font-semibold text-gray-800 truncate">{r.title}</p>
+                    <p className="text-[10px] text-gray-500">{r.votes} votes • {r.status}</p>
+                  </div>
+                  <button type="button" onClick={() => toggleVote(r.id)} className={cn("px-2 py-1 rounded-md text-[10px] font-bold transition-all", votes[r.id] ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600")}>
+                    Upvote
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
-        <Button variant="secondary" onClick={handleClose}>
-          Cancel
-        </Button>
+        <Button variant="secondary" onClick={handleClose}>Cancel</Button>
         <Button variant="primary" onClick={() => handleSubmit('submitted')}>
-          <Send size={15} />
-          {isEdit ? 'Update Request' : 'Submit Request'}
+          <Send size={15} /> {isEdit ? 'Update' : 'Submit Feedback'}
         </Button>
       </div>
     </Modal>

@@ -1,15 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Card, Button } from '../components/ui';
 import { formatDate } from '../lib/utils';
 import { ThumbsUp, MessageSquare, ExternalLink } from 'lucide-react';
 import CommentsSection from '../components/requests/CommentsSection';
-import { Link } from 'react-router-dom';
 import { useAdmin } from '../lib/useAdmin';
 
 export default function ChangelogsPage() {
-  const { requests, releaseNoteLikes, toggleReleaseNoteLike } = useStore();
+  const { orgId: urlOrgId } = useParams();
+  const { requests, releaseNoteLikes, toggleReleaseNoteLike, userOrg, subscribeToAll, activeOrgId } = useStore();
   const isAdmin = useAdmin();
+
+  // Handle subscription switching
+  useEffect(() => {
+    const targetOrgId = urlOrgId || userOrg?.id;
+    if (targetOrgId && activeOrgId !== targetOrgId) {
+      const unsub = subscribeToAll(targetOrgId);
+      return () => unsub && unsub();
+    }
+  }, [urlOrgId, userOrg, subscribeToAll, activeOrgId]);
+
   
   const releaseNotes = requests
     .filter(r => r.isReleaseNote)
@@ -56,7 +67,7 @@ export default function ChangelogsPage() {
                   </div>
 
                   <h2 className="text-xl font-bold text-gray-900 mb-3">
-                    <Link to={isAdmin ? `/admin/requests/${note.id}` : `/requests/${note.id}`} className="hover:text-teal-600 transition-colors">
+                    <Link to={isAdmin ? `/admin/requests/${note.id}` : `/b/${urlOrgId}/requests/${note.id}`} className="hover:text-teal-600 transition-colors">
                       {note.releaseNoteTitle || note.title}
                     </Link>
                   </h2>
