@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Flame, Layout, ChevronDown } from 'lucide-react';
+import { Plus, Flame, Layout, ChevronDown, AlertCircle } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import SummaryCards from '../components/dashboard/SummaryCards';
 import FilterBar from '../components/dashboard/FilterBar';

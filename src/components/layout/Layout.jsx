@@ -13,7 +13,7 @@ export default function Layout() {
   const isWelcome = pathname === '/welcome';
   const { activeOrgId, requests, user } = useStore();
 
-  const showNav = isAdmin || boardId || orgId;
+  const showNav = isAdmin || boardId || urlOrgId;
 
 
   return (

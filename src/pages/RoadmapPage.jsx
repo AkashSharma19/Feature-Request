@@ -120,7 +120,7 @@ export default function RoadmapPage() {
       const virtualItems = requests
         .filter((r) => !assignedIds.includes(r.id))
         .filter((r) => {
-          const res = getQuarterFromDate(r.dueDate);
+          const res = getQuarterFromDate(r.deadline || r.dueDate);
           const q = res?.quarter || 'Backlog';
           const y = res?.year || (col?.year);
           

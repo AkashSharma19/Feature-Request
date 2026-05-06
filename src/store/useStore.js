@@ -147,12 +147,28 @@ export const useStore = create((set, get) => ({
         }
       });
 
+    // Fail-safe fetch for Roadmap
+    getDocs(query(collection(db, 'roadmap'), where('orgId', '==', orgId)))
+      .then(snap => {
+        if (get().roadmapItems.length === 0 && snap.docs.length > 0) {
+          set({ roadmapItems: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
+        }
+      });
+
     const unsubRequests = onSnapshot(
       query(collection(db, 'requests'), where('orgId', '==', orgId)),
       (snapshot) => {
         set({ requests: snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
       },
       (error) => console.error(`Error subscribing to requests:`, error)
+    );
+
+    const unsubRoadmap = onSnapshot(
+      query(collection(db, 'roadmap'), where('orgId', '==', orgId)),
+      (snapshot) => {
+        set({ roadmapItems: snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) });
+      },
+      (error) => console.error(`Roadmap sync error:`, error)
     );
 
     const unsubBoards = onSnapshot(
@@ -183,12 +199,11 @@ export const useStore = create((set, get) => ({
 
     const cleanup = () => {
       unsubRequests();
+      unsubRoadmap();
       unsubBoards();
       unsubClickUp();
       unsubNotifications();
       unsubQuestionnaires();
-      // Note: We don't null out activeOrgId/activeUnsubs here because other components might still need them
-      // This is a singleton-ish approach for the current org
     };
 
     set({ activeUnsubs: cleanup });
@@ -226,6 +241,20 @@ export const useStore = create((set, get) => ({
 
   deleteRequest: async (id) => {
     await deleteDoc(doc(db, 'requests', id));
+  },
+
+  // Roadmap Actions
+  moveRoadmapItem: async (id, updates) => {
+    await updateDoc(doc(db, 'roadmap', id), updates);
+  },
+
+  addToRoadmap: async (item) => {
+    const orgId = get().userOrg?.id;
+    await addDoc(collection(db, 'roadmap'), { ...item, orgId });
+  },
+
+  removeFromRoadmap: async (id) => {
+    await deleteDoc(doc(db, 'roadmap', id));
   },
 
   toggleVote: (id) => {
