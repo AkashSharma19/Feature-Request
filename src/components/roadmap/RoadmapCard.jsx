@@ -64,7 +64,7 @@ export default function RoadmapCard({ item, feature, isOverlay, isAdmin }) {
 
           {/* Footer */}
           <div className="flex items-center justify-between mt-2">
-            {feature.dueDate && (
+            {isAdmin && feature.dueDate && (
               <span className="text-[10px] text-gray-400">ETA: {formatDate(feature.dueDate)}</span>
             )}
             <button

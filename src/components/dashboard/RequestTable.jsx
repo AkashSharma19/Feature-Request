@@ -111,7 +111,7 @@ export default function RequestTable({ requests, onEdit, onReject }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-100">
-            {['Feature', 'Status', 'Category', 'Votes', 'Progress', 'Assignee', 'Due Date', isAdmin ? '' : null].filter(h => h !== null).map((h) => (
+            {['Feature', 'Status', 'Category', 'Votes', 'Progress', isAdmin ? 'Assignee' : null, isAdmin ? 'Due Date' : null, isAdmin ? '' : null].filter(h => h !== null).map((h) => (
               <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
                 {h}
               </th>
@@ -187,25 +187,29 @@ export default function RequestTable({ requests, onEdit, onReject }) {
               </td>
 
               {/* Assignee */}
-              <td className="px-4 py-3 whitespace-nowrap">
-                <span className="text-xs text-gray-600 font-medium">{req.assignee || 'Unassigned'}</span>
-              </td>
+              {isAdmin && (
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <span className="text-xs text-gray-600 font-medium">{req.assignee || 'Unassigned'}</span>
+                </td>
+              )}
 
               {/* Due Date */}
-              <td className="px-4 py-3 whitespace-nowrap">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">{formatDate(req.deadline)}</span>
-                  {(() => {
-                    if (!req.deadline) return null;
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const isOverdue = new Date(req.deadline) < today && !['Closed', 'Tested', 'Cancelled'].includes(req.status);
-                    return isOverdue ? (
-                      <span className="text-[10px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded uppercase">Overdue</span>
-                    ) : null;
-                  })()}
-                </div>
-              </td>
+              {isAdmin && (
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">{formatDate(req.deadline)}</span>
+                    {(() => {
+                      if (!req.deadline) return null;
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const isOverdue = new Date(req.deadline) < today && !['Closed', 'Tested', 'Cancelled'].includes(req.status);
+                      return isOverdue ? (
+                        <span className="text-[10px] font-bold bg-red-100 text-red-600 px-1.5 py-0.5 rounded uppercase">Overdue</span>
+                      ) : null;
+                    })()}
+                  </div>
+                </td>
+              )}
 
               {/* Actions */}
               {isAdmin && (

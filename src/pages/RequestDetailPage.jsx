@@ -492,28 +492,24 @@ export default function RequestDetailPage() {
           <Card className="p-4">
             <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Details</h3>
             <div className="space-y-3">
-              <InfoRow icon={User} label="Assignee" value={request.assignee || 'Unassigned'} />
-              <InfoRow icon={Calendar} label="By when you need this?" value={formatDate(request.dueDate)} />
+              {isAdmin && <InfoRow icon={User} label="Assignee" value={request.assignee || 'Unassigned'} />}
+              {isAdmin && <InfoRow icon={Calendar} label="By when you need this?" value={formatDate(request.dueDate)} />}
               
               {/* Confirmed Deadline (Admin Editable) */}
-              <div className="flex items-start gap-3">
-                <Calendar className="w-4 h-4 text-gray-400 mt-0.5" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Confirmed Deadline</p>
-                  {isAdmin ? (
+              {isAdmin && (
+                <div className="flex items-start gap-3">
+                  <Calendar className="w-4 h-4 text-gray-400 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Confirmed Deadline</p>
                     <input
                       type="date"
                       value={request.deadline || ''}
                       onChange={(e) => updateRequest(request.id, { deadline: e.target.value })}
                       className="text-xs font-semibold text-gray-900 bg-transparent border-b border-dashed border-gray-200 focus:border-teal-500 outline-none w-full py-0.5 hover:border-gray-300 transition-colors"
                     />
-                  ) : (
-                    <p className="text-xs font-semibold text-gray-900 truncate">
-                      {formatDate(request.deadline)}
-                    </p>
-                  )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <InfoRow icon={Calendar} label="Created" value={formatDate(request.createdAt)} />
               <InfoRow icon={Target} label="Category" value={request.category} />
