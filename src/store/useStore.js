@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import { 
   collection, addDoc, onSnapshot, query, where, orderBy, 
-  doc, updateDoc, deleteDoc, setDoc, getDoc, limit, getDocs
+  doc, updateDoc, deleteDoc, setDoc, getDoc, limit, getDocs, arrayUnion
 } from 'firebase/firestore';
 import { 
   signInWithPopup, signOut, onAuthStateChanged 
 } from 'firebase/auth';
 import { db, auth, googleProvider } from '../lib/firebase';
+import { fetchClickUpTask } from '../lib/clickup';
 
 const STATUS_PROGRESS = {
   'Open': 0,
@@ -39,6 +40,8 @@ export const useStore = create((set, get) => ({
   activeUnsubs: null, // Store active cleanup functions
   isLoading: false,
   comments: {},
+  notifications: [],
+  unseenNotificationsCount: 0,
 
   // ── Auth Actions ───────────────────────────────────────────
   initAuth: () => {
@@ -68,8 +71,10 @@ export const useStore = create((set, get) => ({
 
           set({ user, userOrg: orgData, isAuthLoading: false });
           get().subscribeToAll(orgData.id);
+          get().subscribeToNotifications(user.uid);
         } else {
           set({ user, userOrg: null, isAuthLoading: false });
+          get().subscribeToNotifications(user.uid);
         }
       } else {
         set({ user: null, userOrg: null, isAuthLoading: false });
@@ -239,11 +244,75 @@ export const useStore = create((set, get) => ({
   },
 
   updateRequest: async (id, updates) => {
-    await updateDoc(doc(db, 'requests', id), updates);
+    const user = get().user;
+    const finalUpdates = { ...updates };
+    
+    // Automatically update progress if status changes
+    if (updates.status && STATUS_PROGRESS[updates.status] !== undefined) {
+      finalUpdates.progress = STATUS_PROGRESS[updates.status];
+    }
+
+    // Add activity log if status or assignee changes
+    if (updates.status || updates.assignee) {
+      const activityText = updates.status 
+        ? `Status updated to ${updates.status}`
+        : `Assigned to ${updates.assignee}`;
+      
+      finalUpdates.activityLog = arrayUnion({
+        id: `a-${Date.now()}`,
+        type: updates.status ? 'status' : 'priority',
+        text: activityText,
+        date: new Date().toISOString(),
+        user: user?.displayName || user?.email || 'Admin'
+      });
+    }
+
+    await updateDoc(doc(db, 'requests', id), finalUpdates);
+
+    // If status changed, notify owner
+    if (updates.status) {
+      const request = get().requests.find(r => r.id === id);
+      if (request && request.userId) {
+        get().createNotification(request.userId, {
+          type: 'status_change',
+          text: `The status of your request "${request.title}" has been updated to "${updates.status}"`,
+          featureId: id,
+          requestId: id
+        });
+      }
+    }
   },
 
   deleteRequest: async (id) => {
     await deleteDoc(doc(db, 'requests', id));
+  },
+
+  syncAllClickUpTasks: async () => {
+    const { requests, clickupSettings, updateRequest } = get();
+    if (!clickupSettings.apiKey) throw new Error("ClickUp API Key not configured");
+
+    const tasksToSync = requests.filter(r => r.clickupTaskId);
+    if (tasksToSync.length === 0) return 0;
+
+    let successCount = 0;
+    for (const req of tasksToSync) {
+      try {
+        const res = await fetchClickUpTask(
+          req.clickupTaskId,
+          clickupSettings.apiKey,
+          clickupSettings.teamId,
+          clickupSettings.statusMap
+        );
+
+        if (res && res.status) {
+          await updateRequest(req.id, { status: res.status, updatedBy: 'ClickUp' });
+          successCount++;
+        }
+      } catch (error) {
+        console.error(`Failed to sync task ${req.clickupTaskId}:`, error);
+      }
+    }
+    return successCount;
   },
 
   // Roadmap Actions
@@ -282,6 +351,17 @@ export const useStore = create((set, get) => ({
       authorName: user?.displayName || user?.email || 'Guest',
       createdAt: new Date().toISOString()
     });
+
+    // Notify request owner
+    const request = get().requests.find(r => r.id === featureId);
+    if (request && request.userId && request.userId !== user?.uid) {
+      get().createNotification(request.userId, {
+        type: 'comment',
+        text: `${user?.displayName || 'Someone'} commented on your request: "${request.title}"`,
+        featureId,
+        requestId: featureId
+      });
+    }
   },
 
   toggleVote: (id) => {
@@ -325,5 +405,37 @@ export const useStore = create((set, get) => ({
   updateNotificationSettings: async (settings) => {
     const orgId = get().userOrg.id;
     await setDoc(doc(db, 'organizations', orgId, 'settings', 'notifications'), settings, { merge: true });
+  },
+
+  // ── Notifications ──────────────────────────────────────────
+  subscribeToNotifications: (userId) => {
+    if (!userId) return;
+    return onSnapshot(
+      query(collection(db, 'users', userId, 'notifications'), orderBy('createdAt', 'desc'), limit(20)),
+      (snapshot) => {
+        const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const unseen = items.filter(n => !n.seen).length;
+        set({ notifications: items, unseenNotificationsCount: unseen });
+      }
+    );
+  },
+
+  markNotificationsAsSeen: async () => {
+    const user = get().user;
+    if (!user) return;
+    const unseen = get().notifications.filter(n => !n.seen);
+    const promises = unseen.map(n => 
+      updateDoc(doc(db, 'users', user.uid, 'notifications', n.id), { seen: true })
+    );
+    await Promise.all(promises);
+  },
+
+  createNotification: async (userId, data) => {
+    if (!userId || userId === 'Guest' || userId === get().user?.uid) return;
+    await addDoc(collection(db, 'users', userId, 'notifications'), {
+      ...data,
+      seen: false,
+      createdAt: new Date().toISOString()
+    });
   },
 }));

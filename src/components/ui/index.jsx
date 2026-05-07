@@ -51,11 +51,11 @@ export function ProgressBar({ value = 0, className }) {
 
 export function Button({ children, variant = 'primary', size = 'md', className, ...props }) {
   const variants = {
-    primary: 'bg-teal-600 text-white hover:bg-teal-700 shadow-sm',
+    primary: 'bg-brand-900 text-white hover:bg-black shadow-sm active:scale-[0.98]',
     secondary: 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50',
     ghost: 'text-gray-600 hover:bg-gray-100',
     danger: 'bg-red-600 text-white hover:bg-red-700',
-    outline: 'border border-teal-600 text-teal-600 hover:bg-teal-50',
+    outline: 'border border-gray-900 text-gray-900 hover:bg-gray-50',
   };
   const sizes = {
     sm: 'px-3 py-1.5 text-xs',
@@ -92,7 +92,7 @@ export function Input({ className, ...props }) {
   return (
     <input
       className={cn(
-        'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder:text-gray-400',
+        'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all placeholder:text-gray-400',
         className
       )}
       {...props}
@@ -104,7 +104,7 @@ export function Textarea({ className, ...props }) {
   return (
     <textarea
       className={cn(
-        'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all placeholder:text-gray-400 resize-none',
+        'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all placeholder:text-gray-400 resize-none',
         className
       )}
       {...props}
@@ -116,7 +116,7 @@ export function Select({ children, className, ...props }) {
   return (
     <select
       className={cn(
-        'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all appearance-none cursor-pointer',
+        'w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition-all appearance-none cursor-pointer',
         className
       )}
       {...props}
@@ -156,7 +156,7 @@ export function Modal({ open, onClose, children, title, size = 'md' }) {
 export function Spinner({ size = 20 }) {
   return (
     <svg
-      className="animate-spin text-teal-600"
+      className="animate-spin text-gray-900"
       width={size} height={size}
       viewBox="0 0 24 24"
       fill="none"
@@ -175,8 +175,8 @@ export function Switch({ checked, onChange, disabled }) {
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
-        "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        checked ? "bg-teal-600" : "bg-gray-200"
+        "relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+        checked ? "bg-gray-900" : "bg-gray-200"
       )}
     >
       <span

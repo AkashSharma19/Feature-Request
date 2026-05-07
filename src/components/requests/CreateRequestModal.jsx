@@ -161,7 +161,7 @@ export default function CreateRequestModal({ open, onClose, editData = null, for
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
           {activeBoard && (
-            <div className="w-8 h-8 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center">
+            <div className="w-8 h-8 bg-gray-900 text-white rounded-xl flex items-center justify-center">
               <Layout size={16} />
             </div>
           )}
@@ -236,8 +236,8 @@ export default function CreateRequestModal({ open, onClose, editData = null, for
 
         {/* Dynamic Questionnaire Fields */}
         {fields.length > 0 && (
-          <div className="space-y-5 p-4 bg-teal-50/30 rounded-2xl border border-teal-100/50">
-            <p className="text-[10px] font-bold text-teal-600 uppercase tracking-widest mb-2">Additional Information</p>
+          <div className="space-y-5 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+            <p className="text-[10px] font-bold text-gray-900 uppercase tracking-widest mb-2">Additional Information</p>
             {fields.map(f => (
               <Field key={f.id} label={f.label} required={f.required}>
                 {f.type === 'text' && (
@@ -268,11 +268,11 @@ export default function CreateRequestModal({ open, onClose, editData = null, for
                 )}
                 {f.type === 'upload' && (
                   <div className="flex flex-col gap-2">
-                    <label className="flex items-center justify-center gap-2 px-4 py-4 bg-white border border-dashed border-gray-200 rounded-xl text-xs font-medium text-gray-500 hover:border-teal-400 hover:text-teal-600 cursor-pointer transition-all">
+                    <label className="flex items-center justify-center gap-2 px-4 py-4 bg-white border border-dashed border-gray-200 rounded-xl text-xs font-medium text-gray-500 hover:border-gray-900 hover:text-gray-900 cursor-pointer transition-all">
                       <Upload size={14} /> {form.responses[f.id] ? 'File Attached' : 'Click to Upload'}
                       <input type="file" className="hidden" onChange={(e) => setResponse(f.id, e.target.files[0]?.name || '')} />
                     </label>
-                    {form.responses[f.id] && <p className="text-[10px] text-teal-600 italic">File: {form.responses[f.id]}</p>}
+                    {form.responses[f.id] && <p className="text-[10px] text-gray-900 font-bold italic">File: {form.responses[f.id]}</p>}
                   </div>
                 )}
                 {errors[f.id] && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors[f.id]}</p>}
@@ -295,7 +295,7 @@ export default function CreateRequestModal({ open, onClose, editData = null, for
                     <p className="text-[11px] font-semibold text-gray-800 truncate">{r.title}</p>
                     <p className="text-[10px] text-gray-500">{r.votes} votes • {r.status}</p>
                   </div>
-                  <button type="button" onClick={() => toggleVote(r.id)} className={cn("px-2 py-1 rounded-md text-[10px] font-bold transition-all", votes[r.id] ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600")}>
+                  <button type="button" onClick={() => toggleVote(r.id)} className={cn("px-2 py-1 rounded-md text-[10px] font-bold transition-all", votes[r.id] ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600")}>
                     Upvote
                   </button>
                 </div>

@@ -12,15 +12,15 @@ import { cn, getQuarterFromDate } from '../lib/utils';
 import { useAdmin } from '../lib/useAdmin';
 
 const QUARTER_COLORS = {
-  Q1: 'bg-blue-400',
-  Q2: 'bg-teal-500',
-  Q3: 'bg-purple-500',
-  Q4: 'bg-orange-500',
+  Q1: 'bg-gray-400',
+  Q2: 'bg-gray-500',
+  Q3: 'bg-gray-600',
+  Q4: 'bg-gray-700',
 };
 
 const generateQuarterColumns = () => {
   const currentYear = new Date().getFullYear();
-  const cols = [{ id: 'Backlog', label: 'Backlog', color: 'bg-slate-400' }];
+  const cols = [{ id: 'Backlog', label: 'Backlog', color: 'bg-gray-400' }];
   
   // 1 year back to 1 year forward
   for (let y = currentYear - 1; y <= currentYear + 1; y++) {
@@ -38,14 +38,14 @@ const generateQuarterColumns = () => {
 };
 
 const STATUS_COLUMNS = [
-  { id: 'Open',         label: 'Open',         color: 'bg-slate-400' },
-  { id: 'In Progress',  label: 'In Progress',  color: 'bg-blue-500' },
-  { id: 'In Design',    label: 'In Design',    color: 'bg-purple-500' },
-  { id: 'Under Review', label: 'Under Review', color: 'bg-indigo-500' },
-  { id: 'Development',  label: 'Development',  color: 'bg-orange-500' },
-  { id: 'Testing',      label: 'Testing',      color: 'bg-yellow-500' },
-  { id: 'Tested',       label: 'Tested',       color: 'bg-emerald-500' },
-  { id: 'Closed',       label: 'Closed',       color: 'bg-green-500' },
+  { id: 'Open',         label: 'Open',         color: 'bg-gray-300' },
+  { id: 'In Progress',  label: 'In Progress',  color: 'bg-gray-400' },
+  { id: 'In Design',    label: 'In Design',    color: 'bg-gray-500' },
+  { id: 'Under Review', label: 'Under Review', color: 'bg-gray-600' },
+  { id: 'Development',  label: 'Development',  color: 'bg-gray-700' },
+  { id: 'Testing',      label: 'Testing',      color: 'bg-gray-800' },
+  { id: 'Tested',       label: 'Tested',       color: 'bg-gray-900' },
+  { id: 'Closed',       label: 'Closed',       color: 'bg-black' },
 ];
 
 export default function RoadmapPage() {
@@ -100,6 +100,13 @@ export default function RoadmapPage() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const columns = view === 'quarterly' ? quarterColumns : STATUS_COLUMNS;
+
+  const scrollToColumn = (id) => {
+    const el = document.getElementById(`col-${id}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  };
 
   // For quarterly view, items per quarter
   // For status view, items per status (using feature status)
@@ -202,38 +209,20 @@ export default function RoadmapPage() {
   return (
     <div className="p-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 px-1 md:px-0">
         <div>
           <h1 className="text-xl font-bold text-gray-900">Product Roadmap</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Drag cards between columns to reorganize. {view === 'quarterly' ? 'Showing quarterly timeline.' : 'Showing by development status.'}
+            Drag cards between columns to reorganize.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {isAdmin && (
-            <div className="w-48">
-              <Select 
-                value="" 
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val) navigate(`/b/${userOrg?.id}/${val}`);
-                }}
-                className="py-1.5 text-xs font-bold text-gray-700 bg-white border-gray-200 shadow-sm hover:border-teal-300 transition-all cursor-pointer"
-              >
-                <option value="">Switch Board...</option>
-                {boards.map(b => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </Select>
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl w-full sm:w-auto">
             <button
               onClick={() => setView('quarterly')}
               className={cn(
-                'px-4 py-1.5 text-xs font-semibold rounded-lg transition-all',
-                view === 'quarterly' ? 'bg-white shadow-sm text-teal-700' : 'text-gray-500 hover:text-gray-700'
+                'flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-lg transition-all',
+                view === 'quarterly' ? 'bg-gray-900 shadow-md text-white' : 'text-gray-500 hover:text-gray-700'
               )}
             >
               Quarterly
@@ -241,14 +230,30 @@ export default function RoadmapPage() {
             <button
               onClick={() => setView('status')}
               className={cn(
-                'px-4 py-1.5 text-xs font-semibold rounded-lg transition-all',
-                view === 'status' ? 'bg-white shadow-sm text-teal-700' : 'text-gray-500 hover:text-gray-700'
+                'flex-1 sm:flex-none px-4 py-1.5 text-xs font-semibold rounded-lg transition-all',
+                view === 'status' ? 'bg-gray-900 shadow-md text-white' : 'text-gray-500 hover:text-gray-700'
               )}
             >
               By Status
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Quick Navigation (Mobile) */}
+      <div className="lg:hidden flex items-center gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6 mb-2">
+        {columns.map((col) => (
+          <button
+            key={col.id}
+            onClick={() => scrollToColumn(col.id)}
+            className={cn(
+              "flex-shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all",
+              "bg-white border-gray-200 text-gray-500 active:bg-gray-900 active:border-gray-900 active:text-white"
+            )}
+          >
+            {col.label}
+          </button>
+        ))}
       </div>
 
       {/* Board */}
@@ -267,8 +272,8 @@ export default function RoadmapPage() {
               key={col.id} 
               id={`col-${col.id}`} 
               className={cn(
-                "flex-shrink-0",
-                col.id === 'Backlog' && "sticky left-0 z-20 bg-[#F9FAFB] pr-4 shadow-[10px_0_15px_-3px_rgba(0,0,0,0.05)]"
+                "flex-shrink-0 transition-all",
+                col.id === 'Backlog' && "lg:sticky left-0 z-20 lg:bg-[#F9FAFB] lg:pr-4 lg:shadow-[10px_0_15px_-3px_rgba(0,0,0,0.05)]"
               )}
             >
               <RoadmapColumn
@@ -293,15 +298,6 @@ export default function RoadmapPage() {
         </DragOverlay>
       </DndContext>
 
-      {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-3">
-        {columns.map((col) => (
-          <div key={col.id} className="flex items-center gap-2">
-            <div className={cn('w-2.5 h-2.5 rounded-full', col.color)} />
-            <span className="text-xs text-gray-500">{col.label}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

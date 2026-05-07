@@ -27,7 +27,7 @@ export default function CommentsSection({ featureId }) {
       isInternal, 
       actionNeeded: isAdmin ? actionNeeded : false, 
       authorIsAdmin: isAdmin,
-      authorName: isAdmin ? 'Admin' : 'User' 
+      authorName: user?.displayName || user?.email || (isAdmin ? 'Admin' : 'User')
     });
     setText('');
     setActionNeeded(false);
@@ -45,24 +45,24 @@ export default function CommentsSection({ featureId }) {
               key={c.id}
               className={cn(
                 'flex gap-3 p-3 rounded-xl animate-fade-in',
-                c.internal ? 'bg-amber-50 border border-amber-100' : 'bg-gray-50'
+                c.isInternal ? 'bg-gray-50 border border-gray-100 border-dashed' : 'bg-gray-50'
               )}
             >
               <div className={cn(
                 'w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0',
-                c.internal ? 'bg-amber-100 text-amber-700' : 'bg-teal-100 text-teal-700'
+                c.isInternal ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700'
               )}>
-                {c.avatar || c.user?.[0] || 'U'}
+                {(c.authorName || 'U')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <span className="text-xs font-semibold text-gray-700">{c.user}</span>
-                  {c.internal && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 bg-amber-100 rounded-full px-1.5 py-0.5">
+                  <span className="text-xs font-semibold text-gray-700">{c.authorName || 'Anonymous'}</span>
+                  {c.isInternal && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-medium text-gray-600 bg-gray-200 rounded-full px-1.5 py-0.5">
                       <Lock size={8} /> Internal
                     </span>
                   )}
-                  <span className="text-[10px] text-gray-400 ml-auto">{timeAgo(c.date)}</span>
+                  <span className="text-[10px] text-gray-400 ml-auto">{timeAgo(c.createdAt)}</span>
                 </div>
                 <p className="text-sm text-gray-600 leading-relaxed">{c.text}</p>
               </div>
@@ -97,8 +97,8 @@ export default function CommentsSection({ featureId }) {
                     className={cn(
                       'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all',
                       isInternal
-                        ? 'bg-amber-100 text-amber-700 border border-amber-200'
-                        : 'bg-gray-100 text-gray-500 hover:bg-amber-50 hover:text-amber-600'
+                        ? 'bg-gray-900 text-white border border-gray-900 shadow-sm'
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900'
                     )}
                   >
                     <Lock size={11} />
@@ -111,8 +111,8 @@ export default function CommentsSection({ featureId }) {
                       className={cn(
                         'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-all',
                         actionNeeded
-                          ? 'bg-orange-100 text-orange-700 border border-orange-200'
-                          : 'bg-gray-100 text-gray-500 hover:bg-orange-50 hover:text-orange-600'
+                          ? 'bg-gray-900 text-white border border-gray-900 shadow-sm'
+                          : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900'
                       )}
                     >
                       <AlertCircle size={11} />

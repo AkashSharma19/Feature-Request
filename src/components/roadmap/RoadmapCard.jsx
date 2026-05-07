@@ -29,7 +29,7 @@ export default function RoadmapCard({ item, feature, isOverlay, isAdmin }) {
       style={style}
       className={cn(
         'bg-white rounded-xl border border-gray-100 p-3 shadow-sm hover:shadow-md transition-all group',
-        isDragging && !isOverlay && 'shadow-xl border-teal-300 opacity-50'
+        isDragging && !isOverlay && 'shadow-xl border-gray-900 opacity-50'
       )}
     >
       <div className="flex items-start gap-2">
@@ -46,7 +46,7 @@ export default function RoadmapCard({ item, feature, isOverlay, isAdmin }) {
 
         <div className="flex-1 min-w-0">
           <p
-            className="text-sm font-semibold text-gray-800 line-clamp-2 cursor-pointer hover:text-teal-600 transition-colors"
+            className="text-sm font-semibold text-gray-800 line-clamp-2 cursor-pointer hover:text-gray-900 transition-colors"
             onClick={() => navigate(isAdmin ? `/admin/requests/${feature.id}` : `/b/${urlOrgId}/requests/${feature.id}`)}
           >
             {feature.title}
@@ -72,8 +72,8 @@ export default function RoadmapCard({ item, feature, isOverlay, isAdmin }) {
               className={cn(
                 'flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all ml-auto',
                 votes[feature.id]
-                  ? 'bg-teal-100 text-teal-700'
-                  : 'bg-gray-100 text-gray-500 hover:bg-teal-50 hover:text-teal-600'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-900'
               )}
             >
               <ChevronUp size={10} /> {feature.votes}

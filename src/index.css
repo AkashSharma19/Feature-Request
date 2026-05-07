@@ -3,17 +3,19 @@
 @import "tailwindcss";
 
 @theme {
-  --color-teal-50: #f0fdfa;
-  --color-teal-100: #ccfbf1;
-  --color-teal-200: #99f6e4;
-  --color-teal-300: #5eead4;
-  --color-teal-400: #2dd4bf;
-  --color-teal-500: #14b8a6;
-  --color-teal-600: #0d9488;
-  --color-teal-700: #0f766e;
-  --color-teal-800: #115e59;
-  --color-teal-900: #134e4a;
+  --color-brand-50: #f8fafc;
+  --color-brand-100: #f1f5f9;
+  --color-brand-200: #e2e8f0;
+  --color-brand-300: #cbd5e1;
+  --color-brand-400: #94a3b8;
+  --color-brand-500: #64748b;
+  --color-brand-600: #475569;
+  --color-brand-700: #334155;
+  --color-brand-800: #1e293b;
+  --color-brand-900: #0f172a;
   --font-sans: "Google Sans", system-ui, sans-serif;
+  
+  --shadow-premium: 0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 1px rgba(0, 0, 0, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
 }
 
 *, *::before, *::after {
@@ -89,9 +91,9 @@ body {
   from { opacity: 0; transform: scale(0.95); }
   to { opacity: 1; transform: scale(1); }
 }
-@keyframes pulse-teal {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4); }
-  50% { box-shadow: 0 0 0 6px rgba(13, 148, 136, 0); }
+@keyframes pulse-black {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(17, 24, 39, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba(17, 24, 39, 0); }
 }
 
 .animate-fade-in { animation: fadeIn 0.3s ease forwards; }
@@ -114,7 +116,7 @@ body {
 .progress-bar-fill {
   height: 100%;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #0d9488, #2dd4bf);
+  background: #111827;
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

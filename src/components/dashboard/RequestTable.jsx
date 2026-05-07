@@ -125,21 +125,21 @@ export default function RequestTable({ requests, onEdit, onReject }) {
               onClick={() => handleRowClick(req.id)}
               className={cn(
                 "group cursor-pointer transition-colors animate-fade-in",
-                req.actionNeeded ? "bg-orange-50/30 hover:bg-orange-50/70" : "hover:bg-teal-50/30"
+                req.actionNeeded ? "bg-gray-50 hover:bg-gray-100" : "hover:bg-gray-50/80"
               )}
               style={{ animationDelay: `${i * 30}ms` }}
             >
               {/* Feature name */}
               <td className="px-4 py-3 max-w-[280px]">
                 <div className="flex items-center gap-2">
-                  {req.pinned && <Pin size={11} className="text-teal-500 flex-shrink-0" />}
+                  {req.pinned && <Pin size={11} className="text-gray-900 flex-shrink-0" />}
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-semibold text-gray-800 truncate group-hover:text-teal-700 transition-colors">
+                      <p className="font-semibold text-gray-800 truncate group-hover:text-gray-900 transition-colors">
                         {req.title}
                       </p>
                       {req.actionNeeded && (
-                        <span className="text-[9px] font-bold bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0">
+                        <span className="text-[9px] font-bold bg-gray-900 text-white px-1.5 py-0.5 rounded uppercase tracking-wider flex-shrink-0 shadow-sm">
                           Action Needed
                         </span>
                       )}

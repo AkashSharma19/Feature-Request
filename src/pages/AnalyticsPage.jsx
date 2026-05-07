@@ -7,11 +7,11 @@ import {
 import { useStore } from '../store/useStore';
 import { Card, Select } from '../components/ui';
 
-const TEAL_PALETTE = ['#0d9488', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4', '#0f766e'];
+const CHART_PALETTE = ['#111827', '#374151', '#4b5563', '#6b7280', '#9ca3af', '#d1d5db'];
 const CATEGORY_COLORS = {
-  'UI/UX': '#0d9488', 'Performance': '#8b5cf6', 'Security': '#ef4444',
-  'Integration': '#f97316', 'API': '#3b82f6', 'Mobile': '#ec4899',
-  'Analytics': '#eab308', 'Other': '#94a3b8',
+  'UI/UX': '#111827', 'Performance': '#374151', 'Security': '#4b5563',
+  'Integration': '#6b7280', 'API': '#9ca3af', 'Mobile': '#d1d5db',
+  'Analytics': '#1f2937', 'Other': '#94a3b8',
 };
 
 function ChartCard({ title, subtitle, children }) {
@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
     return Object.entries(map).map(([name, value]) => ({ name, value }));
   }, [requests]);
 
-  const ORG_COLORS = ['#0d9488', '#f97316', '#8b5cf6', '#3b82f6', '#eab308'];
+  const ORG_COLORS = ['#111827', '#4b5563', '#9ca3af', '#374151', '#1f2937'];
 
   // Summary stats
   const avgProgress = Math.round(requests.reduce((a, r) => a + r.progress, 0) / (requests.length || 1));
@@ -127,10 +127,10 @@ export default function AnalyticsPage() {
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Requests', value: requests.length, color: 'text-teal-600' },
-          { label: 'Total Votes Cast', value: totalVotes, color: 'text-blue-600' },
-          { label: 'Avg Progress', value: `${avgProgress}%`, color: 'text-purple-600' },
-          { label: 'Top Category', value: topCategory, color: 'text-orange-600' },
+          { label: 'Total Requests', value: requests.length, color: 'text-gray-900' },
+          { label: 'Total Votes Cast', value: totalVotes, color: 'text-gray-900' },
+          { label: 'Avg Progress', value: `${avgProgress}%`, color: 'text-gray-900' },
+          { label: 'Top Category', value: topCategory, color: 'text-gray-900' },
         ].map((s) => (
           <Card key={s.label} className="p-4 text-center">
             <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -147,13 +147,13 @@ export default function AnalyticsPage() {
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={monthlyData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="tealGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0d9488" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
+                  <linearGradient id="blackGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#111827" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#111827" stopOpacity={0} />
                   </linearGradient>
-                  <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                  <linearGradient id="grayGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6b7280" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#6b7280" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -161,8 +161,8 @@ export default function AnalyticsPage() {
                 <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Area type="monotone" dataKey="requests" name="Submitted" stroke="#0d9488" strokeWidth={2} fill="url(#tealGrad)" />
-                <Area type="monotone" dataKey="released" name="Released" stroke="#22c55e" strokeWidth={2} fill="url(#greenGrad)" />
+                <Area type="monotone" dataKey="requests" name="Submitted" stroke="#111827" strokeWidth={2} fill="url(#blackGrad)" />
+                <Area type="monotone" dataKey="released" name="Released" stroke="#6b7280" strokeWidth={2} fill="url(#grayGrad)" />
               </AreaChart>
             </ResponsiveContainer>
           </ChartCard>
@@ -217,7 +217,7 @@ export default function AnalyticsPage() {
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="votes" name="Votes" radius={[0, 6, 6, 0]}>
                   {topVoted.map((_, i) => (
-                    <Cell key={i} fill={i === 0 ? '#0d9488' : i === 1 ? '#14b8a6' : '#5eead4'} />
+                    <Cell key={i} fill={i === 0 ? '#111827' : i === 1 ? '#374151' : '#6b7280'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -263,7 +263,7 @@ export default function AnalyticsPage() {
                     <span className="text-xs text-gray-500 w-24 truncate">{s.name}</span>
                     <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-teal-500 rounded-full transition-all duration-700"
+                        className="h-full bg-gray-900 rounded-full transition-all duration-700"
                         style={{ width: `${pct}%` }}
                       />
                     </div>

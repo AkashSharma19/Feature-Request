@@ -34,8 +34,8 @@ export default function VoteButton({ featureId, votes, size = 'md' }) {
       className={cn(
         'flex flex-col items-center rounded-xl font-semibold border transition-all duration-200 cursor-pointer',
         hasVoted
-          ? 'bg-teal-600 text-white border-teal-600 shadow-sm hover:bg-teal-700'
-          : 'bg-white text-gray-600 border-gray-200 hover:border-teal-400 hover:text-teal-600 hover:bg-teal-50',
+          ? 'bg-gray-900 text-white border-gray-900 shadow-sm hover:bg-black'
+          : 'bg-white text-gray-600 border-gray-200 hover:border-gray-900 hover:text-gray-900 hover:bg-gray-50',
         s.btn
       )}
     >

@@ -1,17 +1,19 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Plus, Flame, Layout, ChevronDown, AlertCircle } from 'lucide-react';
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Plus, Flame, Layout, ChevronDown, AlertCircle, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useStore } from '../store/useStore';
 import SummaryCards from '../components/dashboard/SummaryCards';
 import FilterBar from '../components/dashboard/FilterBar';
 import RequestTable from '../components/dashboard/RequestTable';
+import RequestCard from '../components/dashboard/RequestCard';
 import CreateRequestModal from '../components/requests/CreateRequestModal';
 import { Button, Card, Select, Skeleton } from '../components/ui';
 import { useAdmin } from '../lib/useAdmin';
 import { cn } from '../lib/utils';
 
 
-function DashboardSkeleton() {
+function DashboardSkeleton({ isAdmin }) {
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       {/* Header Skeleton */}
@@ -26,15 +28,17 @@ function DashboardSkeleton() {
       </div>
 
       {/* Summary Cards Skeleton */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Card key={i} className="p-4">
-            <Skeleton className="w-9 h-9 rounded-xl mb-3" />
-            <Skeleton className="h-8 w-16 mb-1" />
-            <Skeleton className="h-3 w-24" />
-          </Card>
-        ))}
-      </div>
+      {isAdmin && (
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Card key={i} className="p-4">
+              <Skeleton className="w-9 h-9 rounded-xl mb-3" />
+              <Skeleton className="h-8 w-16 mb-1" />
+              <Skeleton className="h-3 w-24" />
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Filter Bar Skeleton */}
       <Card className="p-4">
@@ -73,8 +77,15 @@ const DEFAULT_FILTERS = { search: '', status: '', category: '', sort: 'votes', s
 export default function DashboardPage() {
   const isAdmin = useAdmin();
   const { orgId: urlOrgId, boardId } = useParams();
+  const [searchParams] = useSearchParams();
+  const adminBoardId = searchParams.get('board');
+  const effectiveBoardId = boardId || adminBoardId;
+  
   const navigate = useNavigate();
-  const { requests, user, boards, userOrg, subscribeToAll, activeOrgId, isLoading } = useStore();
+  const { 
+    requests, user, boards, userOrg, subscribeToAll, 
+    activeOrgId, isLoading, syncAllClickUpTasks 
+  } = useStore();
 
   // Handle subscription switching
   useEffect(() => {
@@ -94,7 +105,7 @@ export default function DashboardPage() {
   if (isRestricted) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] p-6 text-center animate-fade-in">
-        <div className="w-20 h-20 bg-teal-50 text-teal-600 rounded-3xl flex items-center justify-center mb-6 shadow-sm">
+        <div className="w-20 h-20 bg-gray-900 text-white rounded-3xl flex items-center justify-center mb-6 shadow-xl">
           <Layout size={40} />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Board Portal</h1>
@@ -102,7 +113,7 @@ export default function DashboardPage() {
           To view and submit feedback, please use the specific board link provided by your administrator.
         </p>
         <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 text-xs text-gray-400 italic">
-          Are you an admin? Navigate to the <button onClick={() => navigate('/admin/settings')} className="text-teal-600 font-bold hover:underline">Admin Settings</button> to manage boards.
+          Are you an admin? Navigate to the <button onClick={() => navigate('/admin/settings')} className="text-gray-900 font-bold hover:underline">Admin Settings</button> to manage boards.
         </div>
       </div>
     );
@@ -112,18 +123,33 @@ export default function DashboardPage() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [editData, setEditData] = useState(null);
+  const [isSyncingAll, setIsSyncingAll] = useState(false);
+  
+  const handleSyncAll = async () => {
+    setIsSyncingAll(true);
+    try {
+      const count = await syncAllClickUpTasks();
+      toast.success(`Successfully synced ${count} tasks from ClickUp!`);
+    } catch (error) {
+      toast.error(error.message || "Failed to sync");
+    } finally {
+      setIsSyncingAll(false);
+    }
+  };
 
   const activeBoard = useMemo(() => {
-    if (!boardId) return null;
-    return boards.find(b => b.id === boardId);
-  }, [boardId, boards]);
+    if (!effectiveBoardId) return null;
+    return boards.find(b => b.id === effectiveBoardId);
+  }, [effectiveBoardId, boards]);
+
+  const boardName = activeBoard ? activeBoard.name : 'Main Feedback Feed';
 
   const filtered = useMemo(() => {
     let res = [...requests];
 
-    // Board Filter (Include unassigned requests in board views, but show all if boardId is 'all')
-    if (boardId && boardId !== 'all') {
-      res = res.filter(r => r.boardId === boardId || !r.boardId);
+    // Board Filter
+    if (effectiveBoardId && effectiveBoardId !== 'all') {
+      res = res.filter(r => r.boardId === effectiveBoardId || !r.boardId);
     }
 
     // Scope (My Requests)
@@ -179,7 +205,7 @@ export default function DashboardPage() {
     setEditData(null);
   };
 
-  if (isLoading) return <DashboardSkeleton />;
+  if (isLoading) return <DashboardSkeleton isAdmin={isAdmin} />;
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
@@ -187,14 +213,13 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-4">
           <div className={cn(
-            "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-all",
-            activeBoard ? "bg-teal-50 text-teal-600" : "bg-indigo-50 text-indigo-600"
+            "w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-all bg-gray-900 text-white"
           )}>
             {activeBoard ? <Layout size={24} /> : <Flame size={24} />}
           </div>
           <div>
             <h1 className="text-xl font-bold text-gray-900">
-              {activeBoard ? activeBoard.name : 'Main Feedback Feed'}
+              {boardName}
             </h1>
             <p className="text-sm text-gray-500 mt-1">
               {activeBoard ? `Viewing requests for ${activeBoard.name}` : 'Explore and upvote the best ideas across all boards.'}
@@ -204,19 +229,23 @@ export default function DashboardPage() {
         
         {isAdmin && (
           <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
+            <div className="text-right hidden lg:block">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active View</p>
-              <p className="text-xs font-semibold text-gray-700">{boardId ? 'Switch Board' : 'Organization View'}</p>
+              <p className="text-xs font-semibold text-gray-700">{effectiveBoardId ? 'Switch Board' : 'Organization View'}</p>
             </div>
-            <div className="w-48">
+            <div className="w-40 md:w-48">
               <Select 
-                value={boardId || ''} 
+                value={effectiveBoardId || ''} 
                 onChange={(e) => {
                   const val = e.target.value;
                   const org = urlOrgId || userOrg?.id;
-                  navigate(val ? `/b/${org}/${val}` : `/b/${org}/all`);
+                  if (isAdmin) {
+                    navigate(val ? `/admin?board=${val}` : `/admin`);
+                  } else {
+                    navigate(val ? `/b/${org}/${val}` : `/b/${org}/all`);
+                  }
                 }}
-                className="py-1.5 text-xs font-bold text-gray-700 bg-white border-gray-200 shadow-sm hover:border-teal-300 transition-all cursor-pointer"
+                className="py-1.5 text-xs font-bold text-gray-700 bg-white border-gray-200 shadow-sm hover:border-gray-900 transition-all cursor-pointer"
               >
                 <option value="">All Boards</option>
                 {boards.map(b => (
@@ -231,20 +260,20 @@ export default function DashboardPage() {
 
 
       {/* Summary Cards */}
-      <SummaryCards requests={filtered} />
+      {isAdmin && <SummaryCards requests={filtered} />}
 
       {/* Main Card */}
       <Card>
         {/* Card Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-xl border border-gray-200/50">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 py-4 border-b border-gray-100 gap-4">
+          <div className="flex items-center gap-1 bg-gray-100/80 p-1 rounded-xl border border-gray-200/50 w-full sm:w-auto overflow-x-auto">
             <button
               onClick={() => setFilters(f => ({ ...f, scope: 'all' }))}
               className={cn(
-                "px-4 py-1.5 text-xs font-bold rounded-lg transition-all",
+                "px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-lg transition-all whitespace-nowrap",
                 filters.scope === 'all' 
-                  ? "bg-white text-teal-700 shadow-sm border border-gray-100" 
-                  : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
+                  ? "bg-gray-900 text-white shadow-md" 
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               )}
             >
               All Requests
@@ -258,32 +287,47 @@ export default function DashboardPage() {
                 setFilters(f => ({ ...f, scope: 'mine' }));
               }}
               className={cn(
-                "px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+                "px-3 md:px-4 py-1.5 text-[10px] md:text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap",
                 filters.scope === 'mine' 
-                  ? "bg-white text-teal-700 shadow-sm border border-gray-100" 
-                  : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
+                  ? "bg-gray-900 text-white shadow-md" 
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               )}
             >
               My Requests
               {filters.scope === 'mine' && (
-                <span className="flex h-1.5 w-1.5 rounded-full bg-teal-500"></span>
+                <span className="flex h-1.5 w-1.5 rounded-full bg-white"></span>
               )}
             </button>
           </div>
-          <Button
-            variant="primary"
-            onClick={() => {
-              if (!user) {
-                navigate('/login');
-                return;
-              }
-              setShowCreate(true);
-            }}
-            id="new-request-btn"
-          >
-            <Plus size={15} />
-            {activeBoard ? 'Submit Feedback' : 'New Feature Request'}
-          </Button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            {isAdmin && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSyncAll}
+                disabled={isSyncingAll}
+                className="h-[42px]"
+              >
+                <RefreshCw size={14} className={isSyncingAll ? 'animate-spin' : ''} />
+                <span className="hidden md:inline">Sync ClickUp</span>
+              </Button>
+            )}
+            <Button
+              variant="primary"
+              onClick={() => {
+                if (!user) {
+                  navigate('/login');
+                  return;
+                }
+                setShowCreate(true);
+              }}
+              id="new-request-btn"
+              className="flex-1 sm:flex-none justify-center h-[42px]"
+            >
+              <Plus size={15} />
+              <span className="truncate">{activeBoard ? 'Submit Feedback' : 'New Feature Request'}</span>
+            </Button>
+          </div>
         </div>
 
         <div className="px-6 py-4 border-b border-gray-50">
@@ -307,17 +351,26 @@ export default function DashboardPage() {
               <p className="text-xs text-gray-500 mt-1">Try adjusting your filters to see more requests.</p>
             </div>
           ) : (
-            <RequestTable requests={filtered} onEdit={handleEdit} />
+            <>
+              <div className="hidden lg:block">
+                <RequestTable requests={filtered} onEdit={handleEdit} />
+              </div>
+              <div className="lg:hidden space-y-4">
+                {filtered.map((req, i) => (
+                  <RequestCard key={req.id} request={req} rank={i + 1} />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </Card>
 
       {/* Modals */}
       <CreateRequestModal
-        open={showCreate}
+        open={showCreate || !!editData}
         onClose={handleModalClose}
         editData={editData}
-        forcedBoardId={boardId}
+        forcedBoardId={effectiveBoardId}
       />
     </div>
   );

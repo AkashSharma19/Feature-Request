@@ -158,10 +158,10 @@ export default function SettingsPage() {
                 onClick={() => { setActiveTab(tab.id); setActiveIntegration(null); setActiveBoard(null); }}
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all",
-                  isActive ? "bg-teal-50 text-teal-700 shadow-sm border border-teal-100" : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+                  isActive ? "bg-gray-900 text-white shadow-md border border-gray-900" : "text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                 )}
               >
-                <Icon size={18} className={isActive ? "text-teal-600" : "text-gray-400"} />
+                <Icon size={18} className={isActive ? "text-white" : "text-gray-400"} />
                 {tab.label}
               </button>
             );
@@ -177,7 +177,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {/* ClickUp Card */}
                   <Card 
-                    className="p-6 cursor-pointer hover:border-teal-300 hover:shadow-md transition-all group"
+                    className="p-6 cursor-pointer hover:border-gray-900 hover:shadow-md transition-all group"
                     onClick={() => setActiveIntegration('clickup')}
                   >
                     <div className="flex items-start justify-between mb-4">
@@ -196,7 +196,7 @@ export default function SettingsPage() {
               ) : (
                 <div className="space-y-6 animate-slide-up">
                   <div className="flex items-center justify-between mb-4">
-                    <button onClick={() => setActiveIntegration(null)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-teal-600 transition-colors">
+                    <button onClick={() => setActiveIntegration(null)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-900 transition-colors">
                       <ArrowLeft size={16} /> Back to Integrations
                     </button>
                     <Button onClick={handleSaveClickUp} disabled={loading} size="sm">
@@ -217,7 +217,7 @@ export default function SettingsPage() {
 
                     <div className="pt-8 border-t border-gray-100">
                       <div className="flex items-center gap-2 mb-4">
-                        <RefreshCw size={16} className="text-teal-600" />
+                        <RefreshCw size={16} className="text-gray-900" />
                         <h4 className="text-sm font-bold text-gray-900">Status Mapping</h4>
                       </div>
                       <p className="text-xs text-gray-500 mb-6">Map your local statuses to the exact status names in ClickUp for auto-sync.</p>
@@ -288,7 +288,7 @@ export default function SettingsPage() {
                       boards.map(board => (
                         <Card key={board.id} className="p-4 flex items-center justify-between hover:border-teal-300 transition-colors group">
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center">
+                            <div className="w-10 h-10 bg-gray-100 text-gray-900 rounded-xl flex items-center justify-center">
                               <Layout size={20} />
                             </div>
                              <div>
@@ -326,7 +326,7 @@ export default function SettingsPage() {
               ) : (
                 <div className="space-y-6 animate-slide-up">
                   <div className="flex items-center justify-between mb-4">
-                    <button onClick={() => setActiveBoard(null)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-teal-600 transition-colors">
+                    <button onClick={() => setActiveBoard(null)} className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-900 transition-colors">
                       <ArrowLeft size={16} /> Back to Boards
                     </button>
                     <Button onClick={handleSaveQuestionnaire} disabled={loading} size="sm">
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="flex items-center gap-4 mb-6">
-                    <div className="w-12 h-12 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center">
+                    <div className="w-12 h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center">
                       <ListTodo size={24} />
                     </div>
                     <div>
@@ -358,7 +358,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="w-20 text-center">
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Required</span>
-                          <CheckCircle size={14} className="text-teal-600 mx-auto" />
+                          <CheckCircle size={14} className="text-gray-900 mx-auto" />
                         </div>
                         <div className="w-10"></div>
                       </div>
@@ -376,7 +376,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="w-20 text-center">
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Required</span>
-                          <CheckCircle size={14} className="text-teal-600 mx-auto" />
+                          <CheckCircle size={14} className="text-gray-900 mx-auto" />
                         </div>
                         <div className="w-10"></div>
                       </div>
@@ -394,7 +394,7 @@ export default function SettingsPage() {
                         </div>
                         <div className="w-20 text-center">
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Required</span>
-                          <CheckCircle size={14} className="text-teal-600 mx-auto" />
+                          <CheckCircle size={14} className="text-gray-900 mx-auto" />
                         </div>
                         <div className="w-10"></div>
                       </div>
@@ -432,7 +432,7 @@ export default function SettingsPage() {
                               type="checkbox" 
                               checked={field.required} 
                               onChange={(e) => updateField(field.id, { required: e.target.checked })}
-                              className="w-4 h-4 text-teal-600 rounded border-gray-300"
+                              className="w-4 h-4 text-gray-900 rounded border-gray-300"
                             />
                           </div>
                           <div className="pt-6">

@@ -58,7 +58,7 @@ export default function ChangelogsPage() {
               <Card key={note.id} className="overflow-hidden">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-3 py-1 rounded-full uppercase tracking-wide">
+                    <span className="text-xs font-bold text-white bg-gray-900 px-3 py-1 rounded-full uppercase tracking-wide">
                       {note.category || 'Update'}
                     </span>
                     <span className="text-xs font-medium text-gray-400">
@@ -67,7 +67,7 @@ export default function ChangelogsPage() {
                   </div>
 
                   <h2 className="text-xl font-bold text-gray-900 mb-3">
-                    <Link to={isAdmin ? `/admin/requests/${note.id}` : `/b/${urlOrgId}/requests/${note.id}`} className="hover:text-teal-600 transition-colors">
+                    <Link to={isAdmin ? `/admin/requests/${note.id}` : `/b/${urlOrgId}/requests/${note.id}`} className="hover:text-gray-900 transition-colors">
                       {note.releaseNoteTitle || note.title}
                     </Link>
                   </h2>
@@ -82,7 +82,7 @@ export default function ChangelogsPage() {
                         href={note.releaseNoteLink} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-teal-600 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-gray-900 hover:bg-black px-3 py-1.5 rounded-lg transition-colors"
                       >
                         <ExternalLink size={14} /> Support Documentation
                       </a>
@@ -93,7 +93,7 @@ export default function ChangelogsPage() {
                     <button
                       onClick={() => toggleReleaseNoteLike(note.id)}
                       className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                        isLiked ? 'text-teal-600' : 'text-gray-500 hover:text-gray-700'
+                        isLiked ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'
                       }`}
                     >
                       <ThumbsUp size={16} className={isLiked ? 'fill-current' : ''} />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { Button, Card, Input } from '../components/ui';
@@ -37,7 +37,7 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="w-16 h-16 bg-indigo-600 text-white rounded-2xl flex items-center justify-center shadow-lg mx-auto mb-6">
+          <div className="w-16 h-16 bg-gray-900 text-white rounded-2xl flex items-center justify-center shadow-xl mx-auto mb-6">
             <Building2 size={32} />
           </div>
           <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">Setup your Workspace</h1>
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
             </div>
 
             <div className="space-y-3 pt-2">
-              <div className="flex items-center gap-3 text-xs text-emerald-600 font-semibold bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+              <div className="flex items-center gap-3 text-xs text-gray-900 font-semibold bg-gray-50 p-3 rounded-xl border border-gray-100">
                 <CheckCircle size={16} />
                 <span>Your workspace will be isolated and secure.</span>
               </div>
@@ -68,7 +68,7 @@ export default function OnboardingPage() {
               type="submit"
               variant="primary" 
               size="lg" 
-              className="w-full h-12 text-base font-bold shadow-indigo-200 shadow-lg"
+              className="w-full h-12 text-base font-bold shadow-gray-200 shadow-lg"
               disabled={loading || !orgName.trim()}
             >
               {loading ? "Initializing..." : "Launch Workspace"}

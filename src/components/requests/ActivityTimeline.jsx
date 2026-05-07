@@ -4,12 +4,12 @@ import {
 } from 'lucide-react';
 
 const TYPE_CONFIG = {
-  created:  { icon: Plus,          color: 'bg-teal-50 text-teal-600', dot: 'bg-teal-500' },
-  status:   { icon: GitBranch,     color: 'bg-blue-50 text-blue-600', dot: 'bg-blue-500' },
-  progress: { icon: TrendingUp,    color: 'bg-purple-50 text-purple-600', dot: 'bg-purple-500' },
-  comment:  { icon: MessageSquare, color: 'bg-gray-50 text-gray-600', dot: 'bg-gray-400' },
-  priority: { icon: AlertCircle,   color: 'bg-orange-50 text-orange-600', dot: 'bg-orange-500' },
-  released: { icon: CheckCircle,   color: 'bg-green-50 text-green-600', dot: 'bg-green-500' },
+  created:  { icon: Plus,          color: 'bg-gray-900 text-white', dot: 'bg-gray-900' },
+  status:   { icon: GitBranch,     color: 'bg-gray-100 text-gray-700', dot: 'bg-gray-700' },
+  progress: { icon: TrendingUp,    color: 'bg-gray-100 text-gray-700', dot: 'bg-gray-700' },
+  comment:  { icon: MessageSquare, color: 'bg-gray-50 text-gray-400', dot: 'bg-gray-400' },
+  priority: { icon: AlertCircle,   color: 'bg-gray-100 text-gray-700', dot: 'bg-gray-700' },
+  released: { icon: CheckCircle,   color: 'bg-gray-900 text-white', dot: 'bg-gray-900' },
 };
 
 export default function ActivityTimeline({ activities = [] }) {

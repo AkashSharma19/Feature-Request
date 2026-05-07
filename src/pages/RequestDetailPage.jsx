@@ -16,6 +16,7 @@ import CreateRequestModal from '../components/requests/CreateRequestModal';
 import { fetchClickUpTask } from '../lib/clickup';
 import { formatDate, STATUSES, ASSIGNEES, cn } from '../lib/utils';
 import { useAdmin } from '../lib/useAdmin';
+import toast from 'react-hot-toast';
 
 const TABS = ['Overview', 'Comments', 'Activity'];
 
@@ -113,18 +114,22 @@ function ReleaseNoteModal({ open, onClose, onConfirm, defaultValues }) {
 export default function RequestDetailPage() {
   const { orgId: urlOrgId, id } = useParams();
   const navigate = useNavigate();
-  const { requests, updateRequest, deleteRequest, togglePin, clickupSettings, setClickupSettings, userOrg, subscribeToAll, activeOrgId } = useStore();
+  const { 
+    requests, updateRequest, deleteRequest, togglePin, 
+    clickupSettings, setClickupSettings, userOrg, 
+    subscribeToAll, activeOrgId, isLoading 
+  } = useStore();
   const request = requests.find((r) => r.id === id);
   const isAdmin = useAdmin();
 
   // Handle subscription switching
   useEffect(() => {
     const targetOrgId = urlOrgId || userOrg?.id;
-    if (targetOrgId && activeOrgId !== targetOrgId) {
+    if (targetOrgId && (!activeOrgId || activeOrgId !== targetOrgId)) {
       const unsub = subscribeToAll(targetOrgId);
       return () => unsub && unsub();
     }
-  }, [urlOrgId, userOrg, subscribeToAll, activeOrgId]);
+  }, [urlOrgId, userOrg?.id, subscribeToAll, activeOrgId]);
 
   const [activeTab, setActiveTab] = useState('Overview');
   const [showEdit, setShowEdit] = useState(false);
@@ -137,6 +142,14 @@ export default function RequestDetailPage() {
   const [progressEdit, setProgressEdit] = useState(false);
   const [progressVal, setProgressVal] = useState(request?.progress ?? 0);
 
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full py-32">
+        <div className="w-8 h-8 border-4 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!request) {
     return (
@@ -165,7 +178,7 @@ export default function RequestDetailPage() {
             navigate(org ? `/b/${org}/all` : '/login');
           }
         }}
-        className="flex items-center gap-2 text-sm text-gray-400 hover:text-teal-600 mb-5 transition-colors"
+        className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-900 mb-5 transition-colors"
       >
         <ArrowLeft size={15} /> Back to {request.boardId ? 'Board' : 'Dashboard'}
       </button>
@@ -208,7 +221,7 @@ export default function RequestDetailPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => togglePin(request.id)}
-                      className={request.pinned ? 'text-teal-600 bg-teal-50' : ''}
+                      className={request.pinned ? 'text-white bg-gray-900' : ''}
                     >
                       <Pin size={12} />
                     </Button>
@@ -221,7 +234,7 @@ export default function RequestDetailPage() {
                     {request.category}
                   </span>
                   {request.pinned && (
-                    <span className="text-xs text-teal-600 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="text-xs text-white bg-gray-900 border border-gray-900 px-2 py-0.5 rounded-full flex items-center gap-1">
                       <Pin size={10} /> Pinned
                     </span>
                   )}
@@ -240,56 +253,13 @@ export default function RequestDetailPage() {
                         {STATUSES.map((s) => <option key={s}>{s}</option>)}
                       </Select>
                       
-                      {request.clickupTaskId && (
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={async () => {
-                            setIsSyncing(true);
-                            try {
-                              const res = await fetchClickUpTask(
-                                request.clickupTaskId, 
-                                clickupSettings.apiKey, 
-                                clickupSettings.teamId,
-                                clickupSettings.statusMap
-                              );
-
-                              if (res) {
-                                if (res.status) {
-                                  updateRequest(request.id, { status: res.status, updatedBy: 'ClickUp' });
-                                  alert(`Synced! ClickUp Status: ${res.originalStatus} -> Local Status: ${res.status}`);
-                                } else {
-                                  alert(`Connected to ClickUp, but the status "${res.originalStatus}" doesn't have a match in this app. Please update it manually.`);
-                                }
-                              }
-                            } catch (error) {
-                              alert(`Failed to sync: ${error.message}`);
-                            }
-                            setIsSyncing(false);
-                          }}
-                          disabled={isSyncing || !clickupSettings.apiKey}
-                          className="h-[30px]"
-                        >
-                          <RefreshCw size={12} className={isSyncing ? 'animate-spin' : ''} />
-                          Sync ClickUp
-                        </Button>
-                      )}
-                      
-                      {!clickupSettings.apiKey && request.clickupTaskId && (
-                        <button 
-                          onClick={() => setShowClickupSettings(true)}
-                          className="text-[10px] text-teal-600 hover:underline flex items-center gap-1"
-                        >
-                          <Settings size={10} /> Configure API Key
-                        </button>
-                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-semibold text-gray-400">Assign To:</span>
                       <Select
                         value={request.assignee || 'Unassigned'}
                         onChange={(e) => updateRequest(request.id, { assignee: e.target.value })}
-                        className="w-80 text-xs py-1"
+                        className="w-48 text-xs py-1"
                       >
                         {ASSIGNEES.map((a) => (
                           <option key={a.name} value={a.name}>
@@ -297,6 +267,60 @@ export default function RequestDetailPage() {
                           </option>
                         ))}
                       </Select>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-semibold text-gray-400">ClickUp ID:</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={request.clickupTaskId || ''}
+                          onChange={(e) => updateRequest(request.id, { clickupTaskId: e.target.value })}
+                          placeholder="Task ID (#86xyz)"
+                          className="w-32 text-xs py-1 h-8"
+                        />
+                        {request.clickupTaskId && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={async () => {
+                              setIsSyncing(true);
+                              try {
+                                const res = await fetchClickUpTask(
+                                  request.clickupTaskId, 
+                                  clickupSettings.apiKey, 
+                                  clickupSettings.teamId,
+                                  clickupSettings.statusMap
+                                );
+
+                                if (res) {
+                                  if (res.status) {
+                                    updateRequest(request.id, { status: res.status, updatedBy: 'ClickUp' });
+                                    toast.success(`Synced! ClickUp Status: ${res.originalStatus} -> Local Status: ${res.status}`);
+                                  } else {
+                                    toast.error(`Connected to ClickUp, but the status "${res.originalStatus}" doesn't have a match. Update it manually.`);
+                                  }
+                                }
+                              } catch (error) {
+                                toast.error(`Failed to sync: ${error.message}`);
+                              }
+                              setIsSyncing(false);
+                            }}
+                            disabled={isSyncing || !clickupSettings.apiKey}
+                            className="h-8 px-2"
+                          >
+                            <RefreshCw size={11} className={isSyncing ? 'animate-spin' : ''} />
+                            Sync
+                          </Button>
+                        )}
+                        {!clickupSettings.apiKey && request.clickupTaskId && (
+                          <button 
+                            onClick={() => setShowClickupSettings(true)}
+                            className="text-[10px] text-gray-900 font-bold hover:underline flex items-center gap-1"
+                          >
+                            <Settings size={10} /> Setup
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -309,9 +333,9 @@ export default function RequestDetailPage() {
                 <span className="text-xs font-semibold text-gray-500">Development Progress</span>
                 {isAdmin && progressEdit ? (
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-teal-600">{progressVal}%</span>
+                    <span className="text-sm font-bold text-gray-900">{progressVal}%</span>
                     <button onClick={() => { updateRequest(request.id, { progress: progressVal }); setProgressEdit(false); }}
-                      className="w-5 h-5 bg-teal-600 text-white rounded-full flex items-center justify-center hover:bg-teal-700">
+                      className="w-5 h-5 bg-gray-900 text-white rounded-full flex items-center justify-center hover:bg-black">
                       <Check size={10} />
                     </button>
                     <button onClick={() => { setProgressVal(request.progress); setProgressEdit(false); }}
@@ -322,7 +346,7 @@ export default function RequestDetailPage() {
                 ) : isAdmin ? (
                   <button
                     onClick={() => { setProgressVal(request.progress); setProgressEdit(true); }}
-                    className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+                    className="text-xs text-gray-900 hover:underline font-bold"
                   >
                     {request.progress}% · Edit
                   </button>
@@ -336,10 +360,10 @@ export default function RequestDetailPage() {
                 <input
                   type="range" min="0" max="100" value={progressVal}
                   onChange={(e) => setProgressVal(Number(e.target.value))}
-                  className="w-full accent-teal-600"
+                  className="w-full accent-gray-900"
                 />
               ) : (
-                <ProgressBar value={request.progress} />
+                <ProgressBar value={request.progress} className="bg-gray-100" fillClassName="bg-gray-900" />
               )}
             </div>
           </Card>
@@ -355,7 +379,7 @@ export default function RequestDetailPage() {
                     className={cn(
                       'px-4 py-3 text-sm font-semibold border-b-2 transition-all',
                       activeTab === tab
-                        ? 'border-teal-600 text-teal-700'
+                        ? 'border-gray-900 text-gray-900'
                         : 'border-transparent text-gray-400 hover:text-gray-600'
                     )}
                   >
@@ -371,7 +395,7 @@ export default function RequestDetailPage() {
                   <div>
                     <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Description</h3>
                     <div 
-                      className="prose prose-teal max-w-none text-sm text-gray-600 leading-relaxed"
+                      className="prose max-w-none text-sm text-gray-600 leading-relaxed"
                       dangerouslySetInnerHTML={{ __html: request.description }}
                     />
                   </div>
@@ -392,9 +416,9 @@ export default function RequestDetailPage() {
                       <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Attachments ({request.attachments.length})</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {request.attachments.map((file) => (
-                          <div key={file.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl hover:border-teal-100 transition-all group">
+                          <div key={file.id} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-100 rounded-xl hover:border-gray-900 transition-all group">
                             <div className="flex items-center gap-3 overflow-hidden">
-                              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm text-teal-600">
+                              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm text-gray-900">
                                 <Paperclip size={14} />
                               </div>
                               <div className="min-w-0">
@@ -425,13 +449,13 @@ export default function RequestDetailPage() {
                   {isAdmin && (
                     <div className="pt-5 border-t border-gray-100">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xs font-semibold text-teal-600 uppercase tracking-wide flex items-center gap-1.5">
+                        <h3 className="text-xs font-semibold text-gray-900 uppercase tracking-wide flex items-center gap-1.5">
                           <AlertCircle size={12} /> Internal Admin Note
                         </h3>
                         {!noteEdit ? (
                           <button 
                             onClick={() => { setNoteVal(request.internalNote || ''); setNoteEdit(true); }}
-                            className="text-[10px] font-bold text-gray-400 hover:text-teal-600 uppercase tracking-wider"
+                            className="text-[10px] font-bold text-gray-400 hover:text-gray-900 uppercase tracking-wider"
                           >
                             Edit Note
                           </button>
@@ -439,7 +463,7 @@ export default function RequestDetailPage() {
                           <div className="flex items-center gap-2">
                             <button 
                               onClick={() => { updateRequest(request.id, { internalNote: noteVal }); setNoteEdit(false); }}
-                              className="text-[10px] font-bold text-teal-600 uppercase tracking-wider"
+                              className="text-[10px] font-bold text-gray-900 uppercase tracking-wider"
                             >
                               Save
                             </button>
@@ -459,10 +483,10 @@ export default function RequestDetailPage() {
                           placeholder="Add private team notes here..."
                           value={noteVal || ''}
                           onChange={(e) => setNoteVal(e.target.value)}
-                          className="text-sm border-teal-100 focus:ring-teal-500/10"
+                          className="text-sm border-gray-200 focus:ring-gray-900/10 focus:border-gray-900"
                         />
                       ) : (
-                        <div className="bg-teal-50/50 rounded-xl p-4 border border-teal-100/50">
+                        <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                           <p className="text-sm text-gray-600 italic">
                             {request.internalNote || 'No internal notes added yet.'}
                           </p>
@@ -505,7 +529,7 @@ export default function RequestDetailPage() {
                       type="date"
                       value={request.deadline || ''}
                       onChange={(e) => updateRequest(request.id, { deadline: e.target.value })}
-                      className="text-xs font-semibold text-gray-900 bg-transparent border-b border-dashed border-gray-200 focus:border-teal-500 outline-none w-full py-0.5 hover:border-gray-300 transition-colors"
+                      className="text-xs font-semibold text-gray-900 bg-transparent border-b border-dashed border-gray-200 focus:border-gray-900 outline-none w-full py-0.5 hover:border-gray-300 transition-colors"
                     />
                   </div>
                 </div>
@@ -522,7 +546,7 @@ export default function RequestDetailPage() {
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-3">Tags</h3>
               <div className="flex flex-wrap gap-1.5">
                 {request.tags.map((tag) => (
-                  <span key={tag} className="text-xs bg-teal-50 text-teal-700 border border-teal-100 rounded-full px-2.5 py-0.5 font-medium">
+                  <span key={tag} className="text-xs bg-gray-900 text-white border border-gray-900 rounded-full px-2.5 py-0.5 font-medium shadow-sm">
                     #{tag}
                   </span>
                 ))}
