@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Send, Lock, AlertCircle } from 'lucide-react';
+import { Send, Lock, AlertCircle, Heart } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { Textarea, Button } from '../ui';
 import { useAdmin } from '../../lib/useAdmin';
 import { timeAgo, cn } from '../../lib/utils';
 
 export default function CommentsSection({ featureId }) {
-  const { comments, addComment, subscribeToComments, user } = useStore();
+  const { comments, addComment, subscribeToComments, user, toggleCommentLike } = useStore();
   const isAdmin = useAdmin();
 
   useEffect(() => {
@@ -65,6 +65,18 @@ export default function CommentsSection({ featureId }) {
                   <span className="text-[10px] text-gray-400 ml-auto">{timeAgo(c.createdAt)}</span>
                 </div>
                 <p className="text-sm text-gray-600 leading-relaxed">{c.text}</p>
+                <div className="flex items-center gap-4 mt-2">
+                  <button
+                    onClick={() => toggleCommentLike(featureId, c.id)}
+                    className={cn(
+                      "flex items-center gap-1.5 text-[10px] font-bold transition-all",
+                      c.likes?.includes(user?.uid) ? "text-red-500" : "text-gray-400 hover:text-gray-600"
+                    )}
+                  >
+                    <Heart size={12} fill={c.likes?.includes(user?.uid) ? "currentColor" : "none"} />
+                    {c.likes?.length || 0}
+                  </button>
+                </div>
               </div>
             </div>
           ))}

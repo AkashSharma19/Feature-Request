@@ -40,7 +40,7 @@ export default function SettingsPage() {
     userOrg,
     clickupSettings, updateClickupSettings, 
     boards, addBoard, updateBoard, deleteBoard,
-    questionnaires, updateQuestionnaire
+    questionnaires, updateQuestionnaire, setConfirmModal
   } = useStore();
 
   const [activeTab, setActiveTab] = useState('integrations');
@@ -314,7 +314,19 @@ export default function SettingsPage() {
                             <Button variant="secondary" size="sm" onClick={() => setActiveBoard(board)}>
                               <Settings size={14} /> Configure Form
                             </Button>
-                            <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-600" onClick={() => deleteBoard(board.id)}>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="text-red-400 hover:text-red-600" 
+                              onClick={() => {
+                                setConfirmModal({
+                                  open: true,
+                                  title: 'Delete Board?',
+                                  message: `Are you sure you want to delete the board "${board.name}"? This will also remove its custom questionnaire and cannot be undone.`,
+                                  onConfirm: () => deleteBoard(board.id)
+                                });
+                              }}
+                            >
                               <Trash2 size={14} />
                             </Button>
                           </div>

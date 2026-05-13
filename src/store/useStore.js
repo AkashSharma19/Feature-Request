@@ -42,6 +42,7 @@ export const useStore = create((set, get) => ({
   comments: {},
   notifications: [],
   unseenNotificationsCount: 0,
+  confirmModal: { open: false, title: '', message: '', onConfirm: null, confirmText: 'Delete', variant: 'danger' },
 
   // ── Auth Actions ───────────────────────────────────────────
   initAuth: () => {
@@ -287,6 +288,12 @@ export const useStore = create((set, get) => ({
     await deleteDoc(doc(db, 'requests', id));
   },
 
+  togglePin: async (id) => {
+    const request = get().requests.find(r => r.id === id);
+    if (!request) return;
+    await updateDoc(doc(db, 'requests', id), { pinned: !request.pinned });
+  },
+
   syncAllClickUpTasks: async () => {
     const { requests, clickupSettings, updateRequest } = get();
     if (!clickupSettings.apiKey) throw new Error("ClickUp API Key not configured");
@@ -436,6 +443,27 @@ export const useStore = create((set, get) => ({
       ...data,
       seen: false,
       createdAt: new Date().toISOString()
+    });
+  },
+
+  setConfirmModal: (config) => set((state) => ({ 
+    confirmModal: { ...state.confirmModal, ...config } 
+  })),
+
+  toggleCommentLike: async (featureId, commentId) => {
+    const user = get().user;
+    if (!user) return;
+    
+    const commentRef = doc(db, 'requests', featureId, 'comments', commentId);
+    const comments = get().comments[featureId] || [];
+    const comment = comments.find(c => c.id === commentId);
+    if (!comment) return;
+
+    const likes = comment.likes || [];
+    const hasLiked = likes.includes(user.uid);
+
+    await updateDoc(commentRef, {
+      likes: hasLiked ? arrayRemove(user.uid) : arrayUnion(user.uid)
     });
   },
 }));

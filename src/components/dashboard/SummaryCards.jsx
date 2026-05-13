@@ -1,4 +1,4 @@
-import { FileText, Clock, Calendar, Code2, CheckCircle } from 'lucide-react';
+import { FileText, Clock, Calendar, Code2, CheckCircle, AlertCircle } from 'lucide-react';
 import { Card } from '../ui';
 import { cn } from '../../lib/utils';
 
@@ -43,13 +43,26 @@ const CARDS = [
     textColor: 'text-gray-900',
     fn: (reqs) => reqs.filter((r) => r.status === 'Tested' || r.status === 'Closed').length,
   },
+  {
+    key: 'overdue',
+    label: 'Overdue',
+    icon: AlertCircle,
+    lightBg: 'bg-red-50',
+    textColor: 'text-red-600',
+    fn: (reqs) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return reqs.filter((r) => r.deadline && new Date(r.deadline) < today && !['Closed', 'Tested', 'Cancelled'].includes(r.status)).length;
+    },
+  },
 ];
 
-export default function SummaryCards({ requests }) {
-  const total = requests.length || 1;
+export default function SummaryCards({ requests, isAdmin }) {
+  const displayCards = isAdmin ? CARDS : CARDS.filter((c) => c.key !== 'overdue');
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-      {CARDS.map((card, i) => {
+    <div className={cn("grid grid-cols-2 gap-4", isAdmin ? "lg:grid-cols-6" : "lg:grid-cols-5")}>
+      {displayCards.map((card, i) => {
         const Icon = card.icon;
         const value = card.fn(requests);
         return (

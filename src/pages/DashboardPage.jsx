@@ -260,7 +260,7 @@ export default function DashboardPage() {
 
 
       {/* Summary Cards */}
-      {isAdmin && <SummaryCards requests={filtered} />}
+      {isAdmin && <SummaryCards requests={filtered} isAdmin={isAdmin} />}
 
       {/* Main Card */}
       <Card>
@@ -334,6 +334,7 @@ export default function DashboardPage() {
           <FilterBar
             filters={filters}
             onChange={setFilters}
+            isAdmin={isAdmin}
           />
         </div>
 

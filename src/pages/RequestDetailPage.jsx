@@ -117,7 +117,7 @@ export default function RequestDetailPage() {
   const { 
     requests, updateRequest, deleteRequest, togglePin, 
     clickupSettings, setClickupSettings, userOrg, 
-    subscribeToAll, activeOrgId, isLoading 
+    subscribeToAll, activeOrgId, isLoading, setConfirmModal
   } = useStore();
   const request = requests.find((r) => r.id === id);
   const isAdmin = useAdmin();
@@ -596,7 +596,22 @@ export default function RequestDetailPage() {
                   variant="secondary"
                   size="sm"
                   className="w-full justify-start text-red-600 hover:bg-red-50"
-                  onClick={() => { deleteRequest(request.id); navigate(isAdmin ? '/admin' : '/'); }}
+                  onClick={() => {
+                    setConfirmModal({
+                      open: true,
+                      title: 'Delete Request?',
+                      message: `Are you sure you want to delete "${request.title}"? This action cannot be undone.`,
+                      onConfirm: async () => {
+                        try {
+                          await deleteRequest(request.id);
+                          toast.success('Request deleted');
+                          navigate(isAdmin ? '/admin' : '/');
+                        } catch (err) {
+                          toast.error('Failed to delete request');
+                        }
+                      }
+                    });
+                  }}
                 >
                   <Trash2 size={13} /> Delete Request
                 </Button>

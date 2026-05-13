@@ -55,6 +55,16 @@ export default function RequestCard({ request, rank }) {
             Action Needed
           </span>
         )}
+        {isAdmin && (() => {
+           const today = new Date();
+           today.setHours(0, 0, 0, 0);
+           const isOverdue = request.deadline && new Date(request.deadline) < today && !['Closed', 'Tested', 'Cancelled'].includes(request.status);
+           return isOverdue ? (
+             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border bg-red-100 text-red-600 border-red-200 uppercase">
+               Overdue
+             </span>
+           ) : null;
+        })()}
         <StatusBadge status={request.status} />
         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-gray-50 text-gray-600 border-gray-200">
           {request.category}

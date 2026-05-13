@@ -44,7 +44,9 @@ export default function CreateRequestModal({ open, onClose, editData = null, for
   const [form, setForm] = useState(INITIAL);
   const [errors, setErrors] = useState({});
   const [similarRequests, setSimilarRequests] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isAdmin = useAdmin();
+  const navigate = useNavigate();
 
   // Load questionnaire for active board
   const activeBoardId = forcedBoardId || form.boardId;
@@ -308,8 +310,9 @@ export default function CreateRequestModal({ open, onClose, editData = null, for
       {/* Footer */}
       <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
         <Button variant="secondary" onClick={handleClose}>Cancel</Button>
-        <Button variant="primary" onClick={() => handleSubmit('submitted')}>
-          <Send size={15} /> {isEdit ? 'Update' : 'Submit Feedback'}
+        <Button variant="primary" onClick={() => handleSubmit('submitted')} disabled={isSubmitting}>
+          {isSubmitting ? <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" /> : <Send size={15} />}
+          {isEdit ? (isSubmitting ? 'Updating...' : 'Update') : (isSubmitting ? 'Submitting...' : 'Submit Feedback')}
         </Button>
       </div>
     </Modal>

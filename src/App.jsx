@@ -12,6 +12,7 @@ import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
 import { useStore } from './store/useStore';
 import { Toaster } from 'react-hot-toast';
+import { ConfirmModal } from './components/ui';
 
 function ProtectedRoute({ children, adminOnly = false }) {
   const { user, userOrg, isAuthLoading } = useStore();
@@ -31,7 +32,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
 }
 
 export default function App() {
-  const { initAuth } = useStore();
+  const { initAuth, confirmModal, setConfirmModal } = useStore();
 
   useEffect(() => {
     initAuth();
@@ -40,6 +41,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <Toaster position="top-right" />
+      <ConfirmModal 
+        {...confirmModal} 
+        onClose={() => setConfirmModal({ open: false })} 
+      />
       <Routes>
         {/* Public Landing */}
         <Route path="/welcome" element={<WelcomePage />} />

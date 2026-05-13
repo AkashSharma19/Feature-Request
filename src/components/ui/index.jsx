@@ -1,5 +1,6 @@
 import { createPortal } from 'react-dom';
 import { cn } from '../../lib/utils';
+import { AlertTriangle } from 'lucide-react';
 
 export function Badge({ children, className, variant = 'default' }) {
   return (
@@ -199,5 +200,31 @@ export function Skeleton({ className, ...props }) {
   );
 }
 
-export { default as RichTextEditor } from './RichTextEditor';
+export function ConfirmModal({ open, onClose, onConfirm, title, message, confirmText = 'Delete', variant = 'danger' }) {
+  return (
+    <Modal open={open} onClose={onClose} size="sm">
+      <div className="p-6 text-center">
+        <div className={cn(
+          "w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4",
+          variant === 'danger' ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600"
+        )}>
+          <AlertTriangle size={24} />
+        </div>
+        <h3 className="text-lg font-bold text-gray-900 mb-1">{title}</h3>
+        <p className="text-sm text-gray-500 mb-6">{message}</p>
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={onClose} className="flex-1 justify-center">Cancel</Button>
+          <Button 
+            variant={variant} 
+            onClick={() => { onConfirm(); onClose(); }} 
+            className="flex-1 justify-center px-6"
+          >
+            {confirmText || 'Delete'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
 
+export { default as RichTextEditor } from './RichTextEditor';

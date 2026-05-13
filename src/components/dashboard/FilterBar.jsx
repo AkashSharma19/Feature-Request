@@ -2,7 +2,7 @@ import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { Input, Select, Button } from '../ui';
 import { CATEGORIES, STATUSES } from '../../lib/utils';
 
-export default function FilterBar({ filters, onChange }) {
+export default function FilterBar({ filters, onChange, isAdmin }) {
   const hasFilters = filters.search || filters.status || filters.category;
 
   const clear = () => onChange({
@@ -30,7 +30,7 @@ export default function FilterBar({ filters, onChange }) {
             onChange={(e) => onChange({ ...filters, status: e.target.value })}
           >
             <option value="">All Statuses</option>
-            <option value="Overdue" className="text-red-600 font-medium">Overdue</option>
+            {isAdmin && <option value="Overdue" className="text-red-600 font-medium">Overdue</option>}
             {STATUSES.map((s) => <option key={s}>{s}</option>)}
           </Select>
         </div>

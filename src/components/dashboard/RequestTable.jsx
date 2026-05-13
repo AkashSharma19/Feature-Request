@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ChevronUp, Pin, MoreHorizontal, Edit2, Archive, Trash2, GitMerge, CheckSquare
+  ChevronUp, Pin, MoreHorizontal, Edit2, Trash2, GitMerge, CheckSquare
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { StatusBadge, ProgressBar, Button } from '../ui';
@@ -8,14 +8,21 @@ import { useStore } from '../../store/useStore';
 import { formatDate, cn } from '../../lib/utils';
 import { useAdmin } from '../../lib/useAdmin';
 import { createPortal } from 'react-dom';
+import toast from 'react-hot-toast';
 
-function ActionMenu({ request, onEdit, onArchive, onReject, onPin, onDelete }) {
+function ActionMenu({ request, onEdit, onPin, onDelete }) {
+  const { setConfirmModal } = useStore();
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState({ top: 0, left: 0 });
   const ref = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
-    const fn = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    const fn = (e) => { 
+      const clickedTrigger = ref.current && ref.current.contains(e.target);
+      const clickedMenu = menuRef.current && menuRef.current.contains(e.target);
+      if (!clickedTrigger && !clickedMenu) setOpen(false); 
+    };
     if (open) {
       document.addEventListener('mousedown', fn);
       window.addEventListener('scroll', () => setOpen(false), { once: true });
@@ -44,14 +51,46 @@ function ActionMenu({ request, onEdit, onArchive, onReject, onPin, onDelete }) {
       </button>
       {open && createPortal(
         <div 
+          ref={menuRef}
           className="fixed z-[9999] bg-white border border-gray-100 rounded-xl shadow-lg py-1 w-44 animate-scale-in"
           style={{ top: coords.top, left: coords.left }}
         >
           <MenuItem icon={Edit2} label="Edit Request" onClick={() => { onEdit(request); setOpen(false); }} />
-          <MenuItem icon={Pin} label={request.pinned ? 'Unpin' : 'Pin'} onClick={() => { onPin(request.id); setOpen(false); }} />
-          <MenuItem icon={Archive} label="Archive" onClick={() => { onArchive(request.id); setOpen(false); }} className="text-yellow-600" />
+          <MenuItem 
+            icon={Pin} 
+            label={request.pinned ? 'Unpin' : 'Pin'} 
+            onClick={async () => { 
+              try {
+                await onPin(request.id); 
+                toast.success(request.pinned ? 'Request unpinned' : 'Request pinned');
+              } catch (err) {
+                toast.error('Failed to update pin');
+              }
+              setOpen(false); 
+            }} 
+          />
           <div className="my-1 border-t border-gray-100" />
-          <MenuItem icon={Trash2} label="Delete" onClick={() => { onDelete(request.id); setOpen(false); }} className="text-red-600" />
+          <MenuItem 
+            icon={Trash2} 
+            label="Delete" 
+            onClick={() => { 
+              setConfirmModal({
+                open: true,
+                title: 'Delete Request?',
+                message: `Are you sure you want to delete "${request.title}"? This action cannot be undone.`,
+                onConfirm: async () => {
+                  try {
+                    await onDelete(request.id); 
+                    toast.success('Request deleted');
+                  } catch (err) {
+                    toast.error('Failed to delete request');
+                  }
+                }
+              });
+              setOpen(false); 
+            }} 
+            className="text-red-600" 
+          />
         </div>,
         document.body
       )}
@@ -62,8 +101,14 @@ function ActionMenu({ request, onEdit, onArchive, onReject, onPin, onDelete }) {
 function MenuItem({ icon: Icon, label, onClick, className }) {
   return (
     <button
-      onClick={onClick}
-      className={cn('flex items-center gap-2.5 w-full px-3 py-2 text-xs font-medium hover:bg-gray-50 transition-colors text-gray-700', className)}
+      type="button"
+      onClick={(e) => {
+        console.log(`MenuItem clicked: ${label}`);
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+      }}
+      className={cn('flex items-center gap-2.5 w-full px-3 py-2 text-xs font-medium hover:bg-gray-50 transition-colors text-gray-700 text-left', className)}
     >
       <Icon size={13} />
       {label}
@@ -122,15 +167,14 @@ export default function RequestTable({ requests, onEdit, onReject }) {
           {requests.map((req, i) => (
             <tr
               key={req.id}
-              onClick={() => handleRowClick(req.id)}
               className={cn(
-                "group cursor-pointer transition-colors animate-fade-in",
+                "group transition-colors animate-fade-in",
                 req.actionNeeded ? "bg-gray-50 hover:bg-gray-100" : "hover:bg-gray-50/80"
               )}
               style={{ animationDelay: `${i * 30}ms` }}
             >
               {/* Feature name */}
-              <td className="px-4 py-3 max-w-[280px]">
+              <td className="px-4 py-3 max-w-[280px] cursor-pointer" onClick={() => handleRowClick(req.id)}>
                 <div className="flex items-center gap-2">
                   {req.pinned && <Pin size={11} className="text-gray-900 flex-shrink-0" />}
                   <div>
@@ -150,20 +194,20 @@ export default function RequestTable({ requests, onEdit, onReject }) {
               </td>
 
               {/* Status */}
-              <td className="px-4 py-3 whitespace-nowrap">
+              <td className="px-4 py-3 whitespace-nowrap cursor-pointer" onClick={() => handleRowClick(req.id)}>
                 <StatusBadge status={req.status} />
               </td>
 
 
               {/* Category */}
-              <td className="px-4 py-3 whitespace-nowrap">
+              <td className="px-4 py-3 whitespace-nowrap cursor-pointer" onClick={() => handleRowClick(req.id)}>
                 <span className="text-xs text-gray-600 font-medium bg-gray-100 px-2 py-0.5 rounded-full">
                   {req.category}
                 </span>
               </td>
 
               {/* Votes */}
-              <td className="px-4 py-3">
+              <td className="px-4 py-3 cursor-pointer" onClick={() => handleRowClick(req.id)}>
                 <button
                   onClick={(e) => handleVote(e, req.id)}
                   className={cn(
@@ -179,7 +223,7 @@ export default function RequestTable({ requests, onEdit, onReject }) {
               </td>
 
               {/* Progress */}
-              <td className="px-4 py-3 min-w-[100px]">
+              <td className="px-4 py-3 min-w-[100px] cursor-pointer" onClick={() => handleRowClick(req.id)}>
                 <div className="flex items-center gap-2">
                   <ProgressBar value={req.progress} className="flex-1" />
                   <span className="text-xs text-gray-400 w-7 text-right">{req.progress}%</span>
@@ -188,14 +232,14 @@ export default function RequestTable({ requests, onEdit, onReject }) {
 
               {/* Assignee */}
               {isAdmin && (
-                <td className="px-4 py-3 whitespace-nowrap">
+                <td className="px-4 py-3 whitespace-nowrap cursor-pointer" onClick={() => handleRowClick(req.id)}>
                   <span className="text-xs text-gray-600 font-medium">{req.assignee || 'Unassigned'}</span>
                 </td>
               )}
 
               {/* Due Date */}
               {isAdmin && (
-                <td className="px-4 py-3 whitespace-nowrap">
+                <td className="px-4 py-3 whitespace-nowrap cursor-pointer" onClick={() => handleRowClick(req.id)}>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-500">{formatDate(req.deadline)}</span>
                     {(() => {
@@ -219,15 +263,13 @@ export default function RequestTable({ requests, onEdit, onReject }) {
                     onEdit={onEdit}
                     onPin={togglePin}
                     onDelete={deleteRequest}
-                    onArchive={(id) => updateRequest(id, { status: 'Rejected' })}
-                    onReject={onReject}
                   />
                 </td>
               )}
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
     </div>
   );
 }
