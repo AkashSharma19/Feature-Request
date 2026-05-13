@@ -10,6 +10,9 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import WelcomePage from './pages/WelcomePage';
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
+import LandingPage from './pages/LandingPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import { useStore } from './store/useStore';
 import { Toaster } from 'react-hot-toast';
 import { ConfirmModal } from './components/ui';
@@ -25,7 +28,7 @@ function ProtectedRoute({ children, adminOnly = false }) {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" />;
   if (adminOnly && !userOrg) return <Navigate to="/onboarding" replace />;
 
   return children;
@@ -50,6 +53,8 @@ export default function App() {
         <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="/terms" element={<TermsOfServicePage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
         {/* Guest Board Portal */}
         <Route element={<Layout />}>
@@ -72,8 +77,8 @@ export default function App() {
         </Route>
 
         {/* Default Redirect */}
-        <Route path="/" element={<Navigate to="/admin" replace />} />
-        <Route path="*" element={<Navigate to="/admin" replace />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

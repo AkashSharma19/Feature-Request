@@ -6,7 +6,7 @@ import { cn } from '../../lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 const INITIAL_FORM = {
-  platform: 'Coach LMS',
+  platform: 'Hand Shake',
   title: '',
   description: '',
   problem: '',
@@ -92,7 +92,7 @@ export default function SupportBot() {
                   <Zap size={20} className="text-white" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-white">Coach Bot</h3>
+                  <h3 className="font-bold text-lg text-white">Hand Shake Bot</h3>
                   <p className="text-xs text-teal-100">Synchronized with Roadmap</p>
                 </div>
               </div>
@@ -157,7 +157,7 @@ export default function SupportBot() {
                 <div>
                   <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1.5 tracking-wider">Platform</label>
                   <div className="flex gap-2">
-                    {['Coach LMS', 'Career Coach', 'Coach Resume'].map(p => (
+                    {['Hand Shake', 'Career Guide', 'Resume Pro'].map(p => (
                       <button
                         key={p}
                         onClick={() => set('platform', p)}
@@ -334,7 +334,7 @@ export default function SupportBot() {
 
           {/* Footer */}
           <div className="px-6 py-4 bg-white border-t border-gray-100 flex justify-center">
-            <p className="text-[10px] text-gray-300">Powered by Coach AI</p>
+            <p className="text-[10px] text-gray-300">Powered by Hand Shake AI</p>
           </div>
         </div>
       )}

@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useParams, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Map, BarChart3, Settings,
-  ChevronLeft, ChevronRight, Zap, Star, Megaphone, Mail
+  ChevronLeft, ChevronRight, Zap, Star, Megaphone, Mail, Handshake
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useState } from 'react';
@@ -53,11 +53,11 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Logo */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-gray-100 min-h-[72px]">
         <div className="flex-shrink-0 w-9 h-9 bg-gray-900 rounded-xl flex items-center justify-center shadow-md">
-          <Zap size={18} className="text-white" />
+          <Handshake size={18} className="text-white" />
         </div>
         {!collapsed && (
           <div className="animate-fade-in">
-            <p className="text-sm font-bold text-gray-900 leading-tight tracking-tight uppercase">ProductPulse</p>
+            <p className="text-sm font-bold text-gray-900 leading-tight tracking-tight uppercase">Hand Shake</p>
             <p className="text-[10px] text-gray-400 font-medium tracking-wide">ADMIN PANEL</p>
           </div>
         )}

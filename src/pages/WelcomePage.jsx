@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, ArrowRight, Zap, Target, Star } from 'lucide-react';
+import { Sparkles, ArrowRight, Zap, Target, Star, Handshake } from 'lucide-react';
 import { Button } from '../components/ui';
 import SupportBot from '../components/bot/SupportBot';
 
@@ -35,9 +35,9 @@ export default function WelcomePage() {
             <div className="w-px h-10 bg-gray-100" />
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 bg-gray-100 text-gray-900 rounded-xl flex items-center justify-center mb-2">
-                <Zap size={20} />
+                <Handshake size={20} />
               </div>
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Fast Iteration</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Reliable</span>
             </div>
             <div className="w-px h-10 bg-gray-100" />
             <div className="flex flex-col items-center">

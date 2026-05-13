@@ -33,9 +33,9 @@ export const CATEGORIES = ['Bug', 'Feature Request', 'Data Needed', 'Term Report
 export const STATUSES = ['Open', 'In Progress', 'In Design', 'Under Review', 'Development', 'Testing', 'Tested', 'Closed', 'Cancelled'];
 export const ASSIGNEES = [
   { name: 'Unassigned', role: '', email: '' },
-  { name: 'Anushka', role: 'Super Admin', email: 'anushka@coach.com' },
-  { name: 'Akash', role: 'Manager', email: 'akash@coach.com' },
-  { name: 'Nikhil', role: 'Admin', email: 'nikhil@coach.com' }
+  { name: 'Anushka', role: 'Super Admin', email: 'anushka@handshake.com' },
+  { name: 'Akash', role: 'Manager', email: 'akash@handshake.com' },
+  { name: 'Nikhil', role: 'Admin', email: 'nikhil@handshake.com' }
 ];
 
 export function formatDate(dateStr) {

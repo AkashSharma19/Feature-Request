@@ -7,10 +7,10 @@ import { CATEGORIES, cn } from '../../lib/utils';
 import { useAdmin } from '../../lib/useAdmin';
 import toast from 'react-hot-toast';
 
-const PLATFORMS = ['Coach LMS', 'Career Coach', 'Coach Resume'];
+const PLATFORMS = ['Hand Shake', 'Career Guide', 'Resume Pro'];
 
 const INITIAL = {
-  platform: 'Coach LMS',
+  platform: 'Hand Shake',
   title: '',
   description: '',
   problem: '',
